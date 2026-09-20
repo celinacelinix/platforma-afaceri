@@ -14,6 +14,7 @@ import {
   asambleazaCapitol1, asambleazaCapitol2, asambleazaCapitol3,
   asambleazaCapitol4, asambleazaCapitol5, asambleazaCapitol8, asambleazaCapitol10
 } from '../../lib/asambleazaPlan';
+import { createClient } from '@/lib/supabase';
 
 const { calculeaza } = engine;
 const { evalueazaVerdict } = verdict;
@@ -1604,6 +1605,17 @@ function DashboardInner() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }} className="header-actions">
             <ScenariuSwitcher value={scenariu} onChange={setScenariu} />
             <button onClick={() => router.push('/')} style={lay.backBtn}>← Înapoi</button>
+            <button 
+              onClick={async () => {
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                router.push('/login');
+              }} 
+              style={{ ...lay.backBtn, color: '#ef4444' }}
+              className="logout-btn-desktop"
+            >
+              Ieși din cont
+            </button>
           </div>
         </div>
       </header>
@@ -1760,6 +1772,18 @@ function DashboardInner() {
         >
           <span className="bottom-nav-icon">📄</span>
           <span>Generare PDF</span>
+        </button>
+        <button
+          className="bottom-nav-btn"
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            router.push('/login');
+          }}
+          style={{ color: '#ef4444' }}
+        >
+          <span className="bottom-nav-icon">🚪</span>
+          <span>Ieși</span>
         </button>
       </div>
 
