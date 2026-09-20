@@ -241,7 +241,7 @@ ${extraAvertisment}`);
                   fontSize: '1.1rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                 }}
               >
-                📄 Asamblează planul complet
+                📄 Generare PDF
               </button>
               {!isGataPtAsamblare && <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '8px' }}>Completează capitolele 2-6 pentru a asambla planul.</p>}
             </div>

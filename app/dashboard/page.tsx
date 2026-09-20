@@ -1678,7 +1678,7 @@ function DashboardInner() {
       </div>
 
       {/* ── Global Assemble Button ── */}
-      <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 100 }}>
+      <div className="floating-assemble-btn" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 100 }}>
         <button
           onClick={handleAssembleFullPlan}
           disabled={!allNarrativeCompleted}
@@ -1688,9 +1688,9 @@ function DashboardInner() {
             fontWeight: 600, border: 'none', cursor: allNarrativeCompleted ? 'pointer' : 'not-allowed',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
           }}
-          title={!allNarrativeCompleted ? "Completează toate capitolele narative (2,3,4,5,8,10) pentru a activa" : "Asamblează planul complet"}
+          title={!allNarrativeCompleted ? "Completează toate capitolele narative (2,3,4,5,8,10) pentru a activa" : "Generare PDF"}
         >
-          📄 Asamblează planul complet
+          📄 Generare PDF
         </button>
       </div>
 
@@ -1746,6 +1746,20 @@ function DashboardInner() {
         >
           <span className="bottom-nav-icon">📋</span>
           <span>Capitole</span>
+        </button>
+        <button
+          className="bottom-nav-btn"
+          onClick={() => { 
+            if (allNarrativeCompleted) {
+              handleAssembleFullPlan();
+              setShowChapterDrawer(false);
+            }
+          }}
+          disabled={!allNarrativeCompleted}
+          style={{ opacity: allNarrativeCompleted ? 1 : 0.5 }}
+        >
+          <span className="bottom-nav-icon">📄</span>
+          <span>Generare PDF</span>
         </button>
       </div>
 

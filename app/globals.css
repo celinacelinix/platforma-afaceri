@@ -449,3 +449,9 @@ html, body {
   }
 }
 
+@media (max-width: 480px) {
+  .floating-assemble-btn {
+    display: none !important;
+  }
+}
+
