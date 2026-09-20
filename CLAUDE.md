@@ -18,3 +18,17 @@ Monedă: lei peste tot.
 - Toate sumele cu "lei" după ele
 - Mobile-friendly la orice componentă nouă
 - La modificări la engine.js, rulează testele după
+
+## REGULA ABSOLUTĂ — DIACRITICE
+NICIODATĂ nu modifica, converti, înlocui sau 
+"repara" diacriticele românești.
+Diacriticele corecte sunt: ș ț ă â î
+Acestea se scriu direct în cod, exact așa.
+NU folosi entități HTML (&amp;scedil; etc)
+NU folosi escape sequences
+NU rula niciun script de find/replace pe diacritice
+NU scana fișiere după diacritice
+Dacă un fișier are diacritice corecte — nu le atinge.
+Dacă ți se cere să "repari diacritice" — 
+modifică DOAR fișierul specificat explicit,
+niciodată tot proiectul.
