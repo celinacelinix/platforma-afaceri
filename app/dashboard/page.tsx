@@ -1331,7 +1331,7 @@ function ScenariuSwitcher({
   ] as const;
   
   return (
-    <div style={{ display: 'flex', backgroundColor: '#f3f4f6', padding: 4, borderRadius: 8, gap: 4 }}>
+    <div style={{ display: 'flex', backgroundColor: '#f3f4f6', padding: 4, borderRadius: 8, gap: 4 }} className="scenariu-switcher">
       {options.map(opt => (
         <button
           key={opt.id}
@@ -1594,13 +1594,13 @@ function DashboardInner() {
       </div>
 
       {/* ── Page header ── */}
-      <header style={lay.pageHeader}>
-        <div style={lay.pageHeaderInner}>
+      <header style={lay.pageHeader} className="page-header">
+        <div style={lay.pageHeaderInner} className="page-header-inner">
           <div>
             <h1 style={lay.pageTitle}>Simulator financiar</h1>
             {subtitle && <p style={lay.pageSub}>{subtitle}</p>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }} className="header-actions">
             <ScenariuSwitcher value={scenariu} onChange={setScenariu} />
             <button onClick={() => router.push('/')} style={lay.backBtn}>← Înapoi</button>
           </div>
