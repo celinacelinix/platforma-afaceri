@@ -30,9 +30,10 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
+  const isProiecte = request.nextUrl.pathname.startsWith('/proiecte')
   const isLogin = request.nextUrl.pathname.startsWith('/login')
 
-  if (isDashboard && !user) {
+  if ((isDashboard || isProiecte) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

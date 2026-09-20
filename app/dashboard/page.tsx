@@ -1480,12 +1480,29 @@ function DashboardInner() {
   const router      = useRouter();
 
   const bugetParam  = Number(params.get('buget')       || 200000);
-  const suprafata   = Number(params.get('suprafata')   || 90);
-  const concept     = params.get('concept')     || '';
-  const localitate  = params.get('localitate')  || '';
-  const tipAfacere  = params.get('tip_afacere') || 'restaurant';
+  const suprafataParam = Number(params.get('suprafata')   || 90);
+  const conceptParam  = params.get('concept')     || '';
+  const localitateParam = params.get('localitate')  || '';
+  const tipAfacereParam = params.get('tip_afacere') || 'restaurant';
+  const proiectIdParam = params.get('proiect_id') || null;
 
   const [buget, setBuget] = useState(bugetParam);
+  const [suprafata, setSuprafata] = useState(suprafataParam);
+  const [concept, setConcept] = useState(conceptParam);
+  const [localitate, setLocalitate] = useState(localitateParam);
+  const [tipAfacere, setTipAfacere] = useState(tipAfacereParam);
+
+  // ── Project save/load ──
+  const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [user, setUser] = useState<{ id: string } | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (u) setUser({ id: u.id });
+    });
+  }, []);
 
   const [activeChapter, setActiveChapter] = useState(7);
   const [statuses, setStatuses] = useState<Record<number, ChapterStatus>>(() => {
@@ -1540,6 +1557,69 @@ function DashboardInner() {
   const [angajati, setAngajati]                     = useState(6);
   const [salariuMediu, setSalariuMediu]             = useState(4000);
   const [scenariu, setScenariu]                     = useState<'pesimist' | 'realist' | 'optimist'>('realist');
+
+  // ── Load project from Supabase ──
+  useEffect(() => {
+    if (!proiectIdParam) return;
+    const supabase = createClient();
+    supabase.from('proiecte').select('*').eq('id', proiectIdParam).single()
+      .then(({ data, error }) => {
+        if (error || !data) return;
+        const s = data.state as Record<string, unknown>;
+        if (s.buget != null) setBuget(s.buget as number);
+        if (s.suprafata != null) setSuprafata(s.suprafata as number);
+        if (s.concept != null) setConcept(s.concept as string);
+        if (s.localitate != null) setLocalitate(s.localitate as string);
+        if (s.tipAfacere != null) setTipAfacere(s.tipAfacere as string);
+        if (s.meniu) setMeniu(s.meniu as MenuItem[]);
+        if (s.cheltuieli) setCheltuieli(s.cheltuieli as CheltuialaItem[]);
+        if (s.stocuri) setStocuri(s.stocuri as StocItem[]);
+        if (s.clientiZi != null) setClientiZi(s.clientiZi as number);
+        if (s.pierderiPct != null) setPierderiPct(s.pierderiPct as number);
+        if (s.rampaMuni != null) setRampaMuni(s.rampaMuni as number);
+        if (s.preDeschidereMuni != null) setPreDeschidereMuni(s.preDeschidereMuni as number);
+        if (s.angajati != null) setAngajati(s.angajati as number);
+        if (s.salariuMediu != null) setSalariuMediu(s.salariuMediu as number);
+        if (s.scenariu) setScenariu(s.scenariu as 'pesimist' | 'realist' | 'optimist');
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proiectIdParam]);
+
+  // ── Save handler ──
+  const handleSave = async () => {
+    if (!user) return;
+    setSaveStatus('saving');
+    const supabase = createClient();
+    const projectState = {
+      buget, suprafata, concept, localitate, tipAfacere,
+      meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
+      rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu,
+    };
+    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' · ') || 'Proiect nou';
+
+    if (proiectId) {
+      // Update existing
+      await supabase.from('proiecte').update({
+        state: projectState,
+        nume: numeProiect,
+        domeniu: tipAfacere,
+        localitate: localitate || null,
+        actualizat_la: new Date().toISOString(),
+      }).eq('id', proiectId);
+    } else {
+      // Create new
+      const { data } = await supabase.from('proiecte').insert({
+        user_id: user.id,
+        state: projectState,
+        nume: numeProiect,
+        domeniu: tipAfacere,
+        localitate: localitate || null,
+      }).select('id').single();
+      if (data) setProiectId(data.id);
+    }
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 2000);
+  };
 
   const onConfirmMission = (key: string, val: number) => {
     setMissionStatus(prev => ({ ...prev, [key]: 'verificat' }));
@@ -1602,8 +1682,26 @@ function DashboardInner() {
             <h1 style={lay.pageTitle}>Simulator financiar</h1>
             {subtitle && <p style={lay.pageSub}>{subtitle}</p>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }} className="header-actions">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="header-actions">
             <ScenariuSwitcher value={scenariu} onChange={setScenariu} />
+            {user && (
+              <button
+                onClick={handleSave}
+                disabled={saveStatus === 'saving'}
+                style={{
+                  ...lay.backBtn,
+                  color: saveStatus === 'saved' ? '#16a34a' : '#0f766e',
+                  fontWeight: 600,
+                }}
+              >
+                {saveStatus === 'saving' ? 'Se salvează...' : saveStatus === 'saved' ? 'Salvat ✓' : '💾 Salvează'}
+              </button>
+            )}
+            {user && (
+              <button onClick={() => router.push('/proiecte')} style={lay.backBtn}>
+                📋 Proiectele mele
+              </button>
+            )}
             <button onClick={() => router.push('/')} style={lay.backBtn}>← Înapoi</button>
             <button 
               onClick={async () => {
@@ -1773,6 +1871,17 @@ function DashboardInner() {
           <span className="bottom-nav-icon">📄</span>
           <span>Generare PDF</span>
         </button>
+        {user && (
+          <button
+            className="bottom-nav-btn"
+            onClick={handleSave}
+            disabled={saveStatus === 'saving'}
+            style={{ color: saveStatus === 'saved' ? '#16a34a' : '#0f766e' }}
+          >
+            <span className="bottom-nav-icon">💾</span>
+            <span>{saveStatus === 'saving' ? 'Salvez...' : saveStatus === 'saved' ? 'Salvat ✓' : 'Salvează'}</span>
+          </button>
+        )}
         <button
           className="bottom-nav-btn"
           onClick={async () => {
@@ -1792,6 +1901,19 @@ function DashboardInner() {
       <div className={`chapter-drawer ${showChapterDrawer ? 'open' : ''}`}>
         <div className="drawer-handle" />
         <ul className="drawer-list">
+          {user && (
+            <li>
+              <button
+                onClick={() => { router.push('/proiecte'); setShowChapterDrawer(false); }}
+                className="drawer-item"
+                style={{ color: '#0f766e', fontWeight: 600 }}
+              >
+                <span style={{ fontSize: '1rem' }}>📋</span>
+                <span className="drawer-title">Proiectele mele</span>
+                <span className="drawer-arrow">→</span>
+              </button>
+            </li>
+          )}
           {CHAPTERS.map(ch => {
             const isActive = ch.id === activeChapter;
             return (
