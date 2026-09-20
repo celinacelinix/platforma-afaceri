@@ -10,6 +10,7 @@ import engine from '@/engine/src/engine.js';
 import verdict from '@/engine/src/verdict.js';
 import config from '@/engine/configs/restaurant.test.json';
 import Capitol, { FieldDef } from '../components/Capitol';
+import { useAccess } from '@/lib/useAccess';
 import {
   asambleazaCapitol1, asambleazaCapitol2, asambleazaCapitol3,
   asambleazaCapitol4, asambleazaCapitol5, asambleazaCapitol8, asambleazaCapitol10
@@ -179,28 +180,44 @@ function StatusDot({ status }: { status: ChapterStatus }) {
 // ---------------------------------------------------------------------------
 
 function KpiBar({
-  venitLunar, profitNet, pragRupere, cashMinim,
+  venitLunar, profitNet, pragRupere, cashMinim, isPreview, onUnlock
 }: {
   venitLunar: number; profitNet: number; pragRupere: number | null; cashMinim: number;
+  isPreview?: boolean; onUnlock?: () => void;
 }) {
   return (
     <div style={lay.kpiBar} className="kpi-bar-container">
       <div style={lay.kpiInner} className="kpi-inner">
         <KpiCell label="Venit lunar"   value={`${fmt(venitLunar)} lei`}  />
-        <KpiCell label="Profit net"    value={`${fmt(profitNet)} lei`}   accent={profitNet > 0} />
-        <KpiCell label="Prag rupere"   value={pragRupere !== null ? `${pragRupere} cl/zi` : 'imposibil'} />
-        <KpiCell label="Cash minim"    value={`${fmt(cashMinim)} lei`}   />
+        <KpiCell label="Profit net"    value={`${fmt(profitNet)} lei`}   accent={profitNet > 0} isPreview={isPreview} onUnlock={onUnlock} />
+        <KpiCell label="Prag rupere"   value={pragRupere !== null ? `${pragRupere} cl/zi` : 'imposibil'} isPreview={isPreview} onUnlock={onUnlock} />
+        <KpiCell label="Cash minim"    value={`${fmt(cashMinim)} lei`}   isPreview={isPreview} onUnlock={onUnlock} />
       </div>
     </div>
   );
 }
 
-function KpiCell({ label, value, accent }: { label: string;
-  type?: 'text' | 'textarea' | 'number'; value: string; accent?: boolean }) {
-  return (
+function KpiCell({ label, value, accent, isPreview, onUnlock }: { label: string;
+  type?: 'text' | 'textarea' | 'number'; value: string; accent?: boolean;
+  isPreview?: boolean; onUnlock?: () => void;
+}) {
+  const content = (
     <div style={lay.kpiCell}>
       <span style={lay.kpiLabel}>{label}</span>
       <span style={{ ...lay.kpiValue, color: accent ? ACCENT : '#111' }}>{value}</span>
+    </div>
+  );
+
+  if (!isPreview) return content;
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ filter: 'blur(4px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.6 }}>
+        {content}
+      </div>
+      <div 
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, cursor: 'pointer', zIndex: 10 }}
+        onClick={onUnlock}
+      />
     </div>
   );
 }
@@ -711,9 +728,9 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payl
   );
 }
 
-function CashFlowChart({ serie }: { serie: CashPoint[] }) {
+function CashFlowChart({ serie, isPreview, onUnlock }: { serie: CashPoint[], isPreview?: boolean, onUnlock?: () => void }) {
   return (
-    <div style={sl.chartPanel}>
+    <div style={{...sl.chartPanel, position: 'relative' }}>
       <p style={sl.chartTitle}>Bani în cont, lună cu lună</p>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={serie} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="15%">
@@ -730,6 +747,25 @@ function CashFlowChart({ serie }: { serie: CashPoint[] }) {
         </BarChart>
       </ResponsiveContainer>
       <p style={sl.chartLegend}>Roșu = cash negativ.&nbsp; Gri = perioada înainte de deschidere.</p>
+      {isPreview && (
+        <div 
+          onClick={onUnlock}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '60%', // Approx from month 6 to 24 out of -3 to 24
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            backgroundColor: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer',
+            zIndex: 10,
+            borderTopLeftRadius: 12,
+            borderBottomLeftRadius: 12
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1006,7 +1042,7 @@ function Chapter7({
   clientiZi, setClientiZi, pierderiPct, setPierderiPct, rampaMuni, setRampaMuni,
   preDeschidereMuni, setPreDeschidereMuni, angajati, setAngajati,
   salariuMediu, setSalariuMediu,
-  missionStatus, onConfirmMission,
+  missionStatus, onConfirmMission, renderBlurred, isPreview, onUnlock
 }: {
   rez: Record<string, unknown>;
   alerte: { id: string; nivel: string; mesaj: string }[];
@@ -1021,6 +1057,9 @@ function Chapter7({
   salariuMediu: number; setSalariuMediu: (v: number) => void;
   missionStatus: Record<string, string>;
   onConfirmMission: (key: string, val: number) => void;
+  renderBlurred: (node: React.ReactNode) => React.ReactNode;
+  isPreview?: boolean;
+  onUnlock?: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<Ch7Tab>('meniu');
 
@@ -1076,16 +1115,20 @@ function Chapter7({
       {activeTab === 'meniu' && (
         <section style={ch7.panelFull}>
           <h2 style={ch7.panelTitle}>Meniu și structura venitului</h2>
-          <MenuTable meniu={meniu} onChange={setMeniu} />
-          {meniu.length > 0 && (
-            <div style={ch7.menuStats}>
-              <span>Preț mediu ponderat: <strong>{pretMediu.toFixed(2)} lei</strong></span>
-              <span>Food cost mediu: <strong style={{ color: foodCostPct > 40 ? '#E24B4A' : '#111' }}>{foodCostPct.toFixed(1)}%</strong></span>
-            </div>
+          {renderBlurred(
+            <>
+              <MenuTable meniu={meniu} onChange={setMeniu} />
+              {meniu.length > 0 && (
+                <div style={ch7.menuStats}>
+                  <span>Preț mediu ponderat: <strong>{pretMediu.toFixed(2)} lei</strong></span>
+                  <span>Food cost mediu: <strong style={{ color: foodCostPct > 40 ? '#E24B4A' : '#111' }}>{foodCostPct.toFixed(1)}%</strong></span>
+                </div>
+              )}
+              <div style={{ marginTop: 16 }}>
+                <MissionCard fieldKey="pret_mediu" status={missionStatus.pret_mediu as any} value={Math.round(pretMediu)} onConfirm={(v) => onConfirmMission('pret_mediu', v)} />
+              </div>
+            </>
           )}
-          <div style={{ marginTop: 16 }}>
-            <MissionCard fieldKey="pret_mediu" status={missionStatus.pret_mediu as any} value={Math.round(pretMediu)} onConfirm={(v) => onConfirmMission('pret_mediu', v)} />
-          </div>
 
           {/* Parametri + Rezultate */}
           <div style={{ ...ch7.grid, marginTop: 24 }}>
@@ -1095,13 +1138,17 @@ function Chapter7({
               <MissionCard fieldKey="clienti_zi" status={missionStatus.clienti_zi as any} value={clientiZi} onConfirm={(v) => onConfirmMission('clienti_zi', v)} />
               <div style={{ marginTop: 24 }} />
               
-              <Slider id="pierderi" label="Pierderi / perisabilitate" min={0} max={20} step={0.5} value={pierderiPct} unit="%" onChange={setPierderiPct} />
-              <Slider id="rampa" label="Rampă la capacitate" min={1} max={12} step={1} value={rampaMuni} unit="luni" onChange={setRampaMuni} />
-              <Slider id="pre-deschidere" label="Perioadă pre-deschidere" min={0} max={6} step={1} value={preDeschidereMuni} unit="luni" onChange={setPreDeschidereMuni} />
-              <Slider id="angajati" label="Număr angajați" min={1} max={20} step={1} value={angajati} unit="pers." onChange={setAngajati} />
-              
-              <Slider id="salariu" label="Salariu mediu brut" min={2000} max={15000} step={500} value={salariuMediu} unit="lei" onChange={setSalariuMediu} />
-              <MissionCard fieldKey="salarii" status={missionStatus.salarii as any} value={salariuMediu} onConfirm={(v) => onConfirmMission('salarii', v)} />
+              {renderBlurred(
+                <>
+                  <Slider id="pierderi" label="Pierderi / perisabilitate" min={0} max={20} step={0.5} value={pierderiPct} unit="%" onChange={setPierderiPct} />
+                  <Slider id="rampa" label="Rampă la capacitate" min={1} max={12} step={1} value={rampaMuni} unit="luni" onChange={setRampaMuni} />
+                  <Slider id="pre-deschidere" label="Perioadă pre-deschidere" min={0} max={6} step={1} value={preDeschidereMuni} unit="luni" onChange={setPreDeschidereMuni} />
+                  <Slider id="angajati" label="Număr angajați" min={1} max={20} step={1} value={angajati} unit="pers." onChange={setAngajati} />
+                  
+                  <Slider id="salariu" label="Salariu mediu brut" min={2000} max={15000} step={500} value={salariuMediu} unit="lei" onChange={setSalariuMediu} />
+                  <MissionCard fieldKey="salarii" status={missionStatus.salarii as any} value={salariuMediu} onConfirm={(v) => onConfirmMission('salarii', v)} />
+                </>
+              )}
               <div style={{ marginTop: 24 }} />
 
               <p style={ch7.hint}>Modificările se reflectă instant în rezultate.</p>
@@ -1111,21 +1158,27 @@ function Chapter7({
               <h2 style={ch7.panelTitle}>Rezultate la capacitate</h2>
               <div style={ch7.cards}>
                 <Card label="Venit lunar"          value={`${fmt(venitLunar)} lei`} />
-                <Card label="Profit net"           value={`${fmt(profitNet)} lei`} accent={profitNet > 0} />
-                <Card label="Prag de rupere"       value={pragRupere !== null ? `${pragRupere} clienți/zi` : 'imposibil'} />
-                <Card label="Cash minim proiectat" value={`${fmt(rez.cashMinim as number)} lei`} />
+                {renderBlurred(
+                  <>
+                    <Card label="Profit net"           value={`${fmt(profitNet)} lei`} accent={profitNet > 0} />
+                    <Card label="Prag de rupere"       value={pragRupere !== null ? `${pragRupere} clienți/zi` : 'imposibil'} />
+                    <Card label="Cash minim proiectat" value={`${fmt(rez.cashMinim as number)} lei`} />
+                  </>
+                )}
               </div>
 
-              <div style={ch7.marjaRow}>
-                <span style={ch7.marjaLabel}>Marjă netă</span>
-                <span style={{
-                  ...ch7.marjaBadge,
-                  backgroundColor: marjaNetaPct >= 3 && marjaNetaPct <= 8 ? '#f0fdf4' : marjaNetaPct > 8 ? '#fffbeb' : '#fef2f2',
-                  color:           marjaNetaPct >= 3 && marjaNetaPct <= 8 ? '#166534' : marjaNetaPct > 8 ? '#92400e' : '#b91c1c',
-                }}>
-                  {marjaNetaPct.toFixed(1)}%
-                </span>
-              </div>
+              {renderBlurred(
+                <div style={ch7.marjaRow}>
+                  <span style={ch7.marjaLabel}>Marjă netă</span>
+                  <span style={{
+                    ...ch7.marjaBadge,
+                    backgroundColor: marjaNetaPct >= 3 && marjaNetaPct <= 8 ? '#f0fdf4' : marjaNetaPct > 8 ? '#fffbeb' : '#fef2f2',
+                    color:           marjaNetaPct >= 3 && marjaNetaPct <= 8 ? '#166534' : marjaNetaPct > 8 ? '#92400e' : '#b91c1c',
+                  }}>
+                    {marjaNetaPct.toFixed(1)}%
+                  </span>
+                </div>
+              )}
             </section>
           </div>
         </section>
@@ -1135,15 +1188,19 @@ function Chapter7({
       {activeTab === 'cheltuieli' && (
         <section style={ch7.panelFull}>
           <h2 style={ch7.panelTitle}>Cheltuieli lunare</h2>
-          <CheltuieliTable cheltuieli={cheltuieli} venitLunar={venitLunar} onChange={setCheltuieli} />
-          <div style={{ marginTop: 24 }}>
-            <MissionCard 
-              fieldKey="chirie" 
-              status={missionStatus.chirie as any} 
-              value={Number(cheltuieli.find(c => c.nume.toLowerCase().includes('chiri'))?.valoare || 0)} 
-              onConfirm={(v) => onConfirmMission('chirie', v)} 
-            />
-          </div>
+          {renderBlurred(
+            <>
+              <CheltuieliTable cheltuieli={cheltuieli} venitLunar={venitLunar} onChange={setCheltuieli} />
+              <div style={{ marginTop: 24 }}>
+                <MissionCard 
+                  fieldKey="chirie" 
+                  status={missionStatus.chirie as any} 
+                  value={Number(cheltuieli.find(c => c.nume.toLowerCase().includes('chiri'))?.valoare || 0)} 
+                  onConfirm={(v) => onConfirmMission('chirie', v)} 
+                />
+              </div>
+            </>
+          )}
         </section>
       )}
 
@@ -1151,29 +1208,33 @@ function Chapter7({
       {activeTab === 'stocuri' && (
         <section style={ch7.panelFull}>
           <h2 style={ch7.panelTitle}>Structura stocurilor</h2>
-          <StocuriTable
-            stocuri={stocuri}
-            consumLunar={Number(rez.consumLunar) || 0}
-            capitalBlocat={Number(rez.capitalBlocatStoc) || 0}
-            creditFurnizor={Number(rez.creditFurnizor) || 0}
-            onChange={setStocuri}
-          />
+          {renderBlurred(
+            <StocuriTable
+              stocuri={stocuri}
+              consumLunar={Number(rez.consumLunar) || 0}
+              capitalBlocat={Number(rez.capitalBlocatStoc) || 0}
+              creditFurnizor={Number(rez.creditFurnizor) || 0}
+              onChange={setStocuri}
+            />
+          )}
         </section>
       )}
 
       {/* ── Tab: Cash-flow ── */}
       {activeTab === 'cashflow' && (
         <div>
-          <CashFlowIndicators
-            pragRupere={pragRupere}
-            cashMinim={rez.cashMinim as number}
-            venitLunar={venitLunar}
-            totalCheltuieli={totalCheltuieli}
-            profitNet={profitNet}
-            serieCash={serieCash}
-          />
-          <CashFlowChart serie={serieCash} />
-          <SensitivitateSection rows={(rez.sensibilitate as SensRow[]) ?? []} />
+          {renderBlurred(
+            <CashFlowIndicators
+              pragRupere={pragRupere}
+              cashMinim={rez.cashMinim as number}
+              venitLunar={venitLunar}
+              totalCheltuieli={totalCheltuieli}
+              profitNet={profitNet}
+              serieCash={serieCash}
+            />
+          )}
+          <CashFlowChart serie={serieCash} isPreview={isPreview} onUnlock={onUnlock} />
+          {renderBlurred(<SensitivitateSection rows={(rez.sensibilitate as SensRow[]) ?? []} />)}
         </div>
       )}
 
@@ -1492,25 +1553,41 @@ function DashboardInner() {
   const [localitate, setLocalitate] = useState(localitateParam);
   const [tipAfacere, setTipAfacere] = useState(tipAfacereParam);
 
+  const { isPreview, isPaid, isAdmin, loading: accessLoading, user } = useAccess(proiectIdParam);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [showUnlockedToast, setShowUnlockedToast] = useState(false);
+
+  useEffect(() => {
+    // If the user just arrived and is logged in + paid, maybe show a toast if we want to.
+    // The prompt says "Un mesaj verde discret timp de 3 secunde: ✓ Simulare deblocată — bine ai venit!"
+    // But how do we know they JUST unlocked? We don't, unless we use a query param `?unlocked=true`.
+    if (isPaid && params.get('unlocked') === 'true') {
+      setShowUnlockedToast(true);
+      setTimeout(() => setShowUnlockedToast(false), 3000);
+      router.replace(`/dashboard?proiect_id=${proiectIdParam}`); // clean URL
+    }
+  }, [isPaid, params, router, proiectIdParam]);
+
+  const renderBlurred = (content: React.ReactNode) => {
+    if (!isPreview) return content;
+    return (
+      <div style={{ position: 'relative' }}>
+        <div style={{ filter: 'blur(6px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.6 }}>
+          {content}
+        </div>
+        <div 
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.1)', cursor: 'pointer', zIndex: 10 }}
+          onClick={() => setShowUnlockModal(true)}
+        />
+      </div>
+    );
+  };
+
   // ── Project save/load ──
   const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [user, setUser] = useState<{ id: string } | null>(null);
-  const [admin, setAdmin] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (u) {
-        setUser({ id: u.id });
-        import('@/lib/isAdmin').then(({ isAdmin }) => {
-          isAdmin().then(setAdmin);
-        });
-      }
-    });
-  }, []);
 
   const [activeChapter, setActiveChapter] = useState(7);
   const [statuses, setStatuses] = useState<Record<number, ChapterStatus>>(() => {
@@ -1616,9 +1693,9 @@ function DashboardInner() {
       nume: numeProiect,
       domeniu: tipAfacere,
       localitate: localitate || null,
-      platit: true,
-      platit_la: new Date().toISOString(),
-      pret_platit: 149,
+      platit: isAdmin,
+      platit_la: isAdmin ? new Date().toISOString() : null,
+      pret_platit: isAdmin ? 0 : null,
     }).select('id').single().then(({ data }) => {
       if (data) setProiectId(data.id);
     });
@@ -1706,6 +1783,8 @@ function DashboardInner() {
         profitNet={rez.profitNet as number}
         pragRupere={rez.pragRupere as number | null}
         cashMinim={rez.cashMinim as number}
+        isPreview={isPreview}
+        onUnlock={() => setShowUnlockModal(true)}
       />
 
       {/* ── Mobile chapter strip (below KPI bar, hidden on desktop) ── */}
@@ -1725,7 +1804,7 @@ function DashboardInner() {
             {subtitle && <p style={lay.pageSub}>{subtitle}</p>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="header-actions">
-            <ScenariuSwitcher value={scenariu} onChange={setScenariu} />
+            {renderBlurred(<ScenariuSwitcher value={scenariu} onChange={setScenariu} />)}
             {user && saveStatus !== 'idle' && (
               <span style={{
                 fontSize: '0.75rem',
@@ -1736,7 +1815,7 @@ function DashboardInner() {
               </span>
             )}
             {user && (
-              <button onClick={() => router.push(admin ? '/dashboard' : '/checkout?pret=99')} style={{ ...lay.backBtn, color: '#0f766e', fontWeight: 600 }}>
+              <button onClick={() => router.push(isAdmin ? '/dashboard' : '/checkout?pret=99')} style={{ ...lay.backBtn, color: '#0f766e', fontWeight: 600 }}>
                 + Proiect nou
               </button>
             )}
@@ -1745,7 +1824,7 @@ function DashboardInner() {
                 📋 Proiectele mele
               </button>
             )}
-            {admin && (
+            {isAdmin && (
               <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0f766e', backgroundColor: '#ccfbf1', padding: '4px 10px', borderRadius: 999 }}>
                 👑 Admin
               </span>
@@ -1793,43 +1872,46 @@ function DashboardInner() {
               salariuMediu={salariuMediu} setSalariuMediu={setSalariuMediu}
               missionStatus={missionStatus}
               onConfirmMission={onConfirmMission}
+              renderBlurred={renderBlurred}
+              isPreview={isPreview}
+              onUnlock={() => setShowUnlockModal(true)}
             />
           ) : activeChapter === 9 ? (
-            <Chapter9 rez={rez as Record<string, unknown>} buget={buget} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} missionStatus={missionStatus} onConfirmMission={onConfirmMission} />
+            renderBlurred(<Chapter9 rez={rez as Record<string, unknown>} buget={buget} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} missionStatus={missionStatus} onConfirmMission={onConfirmMission} />)
           ) : activeChapter === 1 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={1} title="Rezumat executiv" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={(f, s, r) => asambleazaCapitol1({ cap2: {} }, s, r)} isAutoGenerated isBlocked={!allNarrativeCompleted} blockedMessage="Acest capitol se generează automat pe baza celorlalte capitole. Asigură-te că ai completat toate celelalte capitole înainte de a-l asambla." onCompletionChange={(val) => handleCompletionChange(1, val)} />
+              {renderBlurred(<Capitol nr={1} title="Rezumat executiv" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={(f, s, r) => asambleazaCapitol1({ cap2: {} }, s, r)} isAutoGenerated isBlocked={!allNarrativeCompleted} blockedMessage="Acest capitol se generează automat pe baza celorlalte capitole. Asigură-te că ai completat toate celelalte capitole înainte de a-l asambla." onCompletionChange={(val) => handleCompletionChange(1, val)} />)}
             </div>
           ) : activeChapter === 2 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={2} title="Descrierea afacerii" fields={cap2Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol2} onCompletionChange={(val) => handleCompletionChange(2, val)} />
+              {renderBlurred(<Capitol nr={2} title="Descrierea afacerii" fields={cap2Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol2} onCompletionChange={(val) => handleCompletionChange(2, val)} />)}
             </div>
           ) : activeChapter === 3 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={3} title="Piața și locația" fields={cap3Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol3} onCompletionChange={(val) => handleCompletionChange(3, val)} />
+              {renderBlurred(<Capitol nr={3} title="Piața și locația" fields={cap3Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol3} onCompletionChange={(val) => handleCompletionChange(3, val)} />)}
             </div>
           ) : activeChapter === 4 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={4} title="Analiza concurenței" fields={cap4Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol4} onCompletionChange={(val) => handleCompletionChange(4, val)} />
+              {renderBlurred(<Capitol nr={4} title="Analiza concurenței" fields={cap4Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol4} onCompletionChange={(val) => handleCompletionChange(4, val)} />)}
             </div>
           ) : activeChapter === 5 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={5} title="Plan operațional" fields={cap5Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol5} onCompletionChange={(val) => handleCompletionChange(5, val)} />
+              {renderBlurred(<Capitol nr={5} title="Plan operațional" fields={cap5Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol5} onCompletionChange={(val) => handleCompletionChange(5, val)} />)}
             </div>
           ) : activeChapter === 6 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={6} title="Autorizații" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={() => [{ titlu: "", text: "Sistemul a generat automat lista de autorizații necesare din configurație." }]} isAutoGenerated onCompletionChange={(val) => handleCompletionChange(6, val)} />
+              {renderBlurred(<Capitol nr={6} title="Autorizații" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={() => [{ titlu: "", text: "Sistemul a generat automat lista de autorizații necesare din configurație." }]} isAutoGenerated onCompletionChange={(val) => handleCompletionChange(6, val)} />)}
             </div>
           ) : activeChapter === 8 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={8} title="Marketing" fields={cap8Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol8} onCompletionChange={(val) => handleCompletionChange(8, val)} />
+              {renderBlurred(<Capitol nr={8} title="Marketing" fields={cap8Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol8} onCompletionChange={(val) => handleCompletionChange(8, val)} />)}
             </div>
           ) : activeChapter === 10 ? (
             <div style={ch7.wrap}>
-              <Capitol nr={10} title="Plan de acțiune" fields={cap10Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol10} onCompletionChange={(val) => handleCompletionChange(10, val)} />
+              {renderBlurred(<Capitol nr={10} title="Plan de acțiune" fields={cap10Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol10} onCompletionChange={(val) => handleCompletionChange(10, val)} />)}
             </div>
           ) : (
-            <ChapterPlaceholder chapter={activeChapterObj} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} />
+            renderBlurred(<ChapterPlaceholder chapter={activeChapterObj} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} />)
           )}
         </main>
       </div>
@@ -1969,6 +2051,73 @@ function DashboardInner() {
         </ul>
       </div>
 
+      {/* ── Sticky Banner for Preview ── */}
+      {isPreview && (
+        <div className="preview-banner">
+          <div className="preview-banner-inner">
+            <div className="preview-banner-text">
+              <span className="preview-banner-title">🔓 Deblochează simularea completă</span>
+              <span className="preview-banner-sub">Raport complet + toate cifrele + export PDF</span>
+            </div>
+            <button className="preview-banner-btn" onClick={() => router.push('/checkout?pret=149')}>
+              149 lei — Începe acum
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Unlock Modal ── */}
+      {showUnlockModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24
+        }}>
+          <div style={{
+            backgroundColor: '#fff', borderRadius: 12, width: '100%', maxWidth: 400,
+            padding: 24, display: 'flex', flexDirection: 'column', gap: 16,
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#111', fontWeight: 600 }}>
+              Această funcție e disponibilă după deblocare
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.9375rem', color: '#4b5563', lineHeight: 1.5 }}>
+              Deblochează acum pentru 149 lei și accesează toate cifrele, tabelele editabile și exportul PDF.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+              <button
+                onClick={() => router.push('/checkout?pret=149')}
+                style={{
+                  width: '100%', padding: '12px', backgroundColor: '#0f766e', color: 'white',
+                  border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '1rem', cursor: 'pointer'
+                }}
+              >
+                Deblochează — 149 lei
+              </button>
+              <button
+                onClick={() => setShowUnlockModal(false)}
+                style={{
+                  width: '100%', padding: '12px', backgroundColor: 'transparent', color: '#6b7280',
+                  border: '1px solid #d1d5db', borderRadius: 8, fontWeight: 500, fontSize: '0.9375rem', cursor: 'pointer'
+                }}
+              >
+                Poate mai târziu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Unlocked Toast ── */}
+      {showUnlockedToast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 3000,
+          backgroundColor: '#10b981', color: 'white', padding: '12px 24px',
+          borderRadius: 8, fontWeight: 500, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}>
+          ✓ Simulare deblocată — bine ai venit!
+        </div>
+      )}
     </div>
   );
 }
