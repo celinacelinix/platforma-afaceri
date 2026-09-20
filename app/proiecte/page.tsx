@@ -10,6 +10,7 @@ type Proiect = {
   domeniu: string | null;
   localitate: string | null;
   actualizat_la: string;
+  platit: boolean;
 };
 
 export default function ProiectePage() {
@@ -26,10 +27,16 @@ export default function ProiectePage() {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('proiecte')
-      .select('id, nume, domeniu, localitate, actualizat_la')
+      .select('id, nume, domeniu, localitate, actualizat_la, platit')
+      .eq('platit', true)
       .order('actualizat_la', { ascending: false });
 
     if (!error && data) {
+      if (data.length === 0) {
+        // No paid projects → redirect to checkout for first project (149 lei)
+        router.replace('/checkout?pret=149');
+        return;
+      }
       setProiecte(data);
     }
     setLoading(false);
@@ -50,6 +57,12 @@ export default function ProiectePage() {
     router.push(`/dashboard?proiect_id=${id}`);
   }
 
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
+
   if (loading) {
     return (
       <main style={styles.page}>
@@ -66,73 +79,57 @@ export default function ProiectePage() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>Proiectele mele</h1>
-            <p style={styles.subtitle}>{proiecte.length} {proiecte.length === 1 ? 'proiect' : 'proiecte'} salvate</p>
-          </div>
-          <button
-            onClick={() => router.push('/')}
-            className="btn-accent"
-            style={styles.newBtn}
-          >
-            + Proiect nou
-          </button>
-        </div>
-
-        {proiecte.length === 0 ? (
-          <div style={styles.empty}>
-            <div style={styles.emptyIcon}>📋</div>
-            <p style={styles.emptyTitle}>Niciun proiect salvat</p>
-            <p style={styles.emptyDesc}>
-              Creează o simulare și apasă &quot;Salvează&quot; pentru a o păstra aici.
+            <p style={styles.subtitle}>
+              {proiecte.length} {proiecte.length === 1 ? 'proiect' : 'proiecte'}
             </p>
+          </div>
+          <div style={styles.headerActions}>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/checkout?pret=99')}
               className="btn-accent"
-              style={{ ...styles.newBtn, marginTop: 16 }}
+              style={styles.newBtn}
             >
-              + Creează primul proiect
+              + Proiect nou
+            </button>
+            <button onClick={handleLogout} style={styles.logoutBtn}>
+              Ieși din cont
             </button>
           </div>
-        ) : (
-          <div style={styles.grid}>
-            {proiecte.map(p => (
-              <div key={p.id} style={styles.card}>
-                <div style={styles.cardBody}>
-                  <h2 style={styles.cardTitle}>{p.nume}</h2>
-                  <div style={styles.cardMeta}>
-                    {p.domeniu && <span style={styles.badge}>{p.domeniu}</span>}
-                    {p.localitate && <span style={styles.metaText}>📍 {p.localitate}</span>}
-                  </div>
-                  <p style={styles.cardDate}>
-                    Ultima salvare: {new Date(p.actualizat_la).toLocaleDateString('ro-RO', {
-                      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })}
-                  </p>
-                </div>
-                <div style={styles.cardActions}>
-                  <button
-                    onClick={() => handleOpen(p.id)}
-                    className="btn-accent"
-                    style={styles.openBtn}
-                  >
-                    Deschide
-                  </button>
-                  <button
-                    onClick={() => handleDelete(p.id)}
-                    disabled={deletingId === p.id}
-                    style={styles.deleteBtn}
-                  >
-                    {deletingId === p.id ? 'Se șterge...' : 'Șterge'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        </div>
 
-        <div style={styles.footer}>
-          <button onClick={() => router.push('/dashboard')} style={styles.backLink}>
-            ← Înapoi la simulator
-          </button>
+        <div style={styles.grid}>
+          {proiecte.map(p => (
+            <div key={p.id} style={styles.card}>
+              <div style={styles.cardBody}>
+                <h2 style={styles.cardTitle}>{p.nume}</h2>
+                <div style={styles.cardMeta}>
+                  {p.domeniu && <span style={styles.badge}>{p.domeniu}</span>}
+                  {p.localitate && <span style={styles.metaText}>📍 {p.localitate}</span>}
+                </div>
+                <p style={styles.cardDate}>
+                  Ultima salvare: {new Date(p.actualizat_la).toLocaleDateString('ro-RO', {
+                    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                  })}
+                </p>
+              </div>
+              <div style={styles.cardActions}>
+                <button
+                  onClick={() => handleOpen(p.id)}
+                  className="btn-accent"
+                  style={styles.openBtn}
+                >
+                  Deschide
+                </button>
+                <button
+                  onClick={() => handleDelete(p.id)}
+                  disabled={deletingId === p.id}
+                  style={styles.deleteBtn}
+                >
+                  {deletingId === p.id ? 'Se șterge...' : 'Șterge'}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </main>
@@ -157,6 +154,12 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
     gap: 16,
   },
+  headerActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
   title: {
     fontSize: '1.5rem',
     fontWeight: 700,
@@ -177,27 +180,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'inherit',
     cursor: 'pointer',
   },
-  empty: {
-    textAlign: 'center',
-    padding: '60px 24px',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    border: '1px solid #e5e7eb',
-  },
-  emptyIcon: {
-    fontSize: '2.5rem',
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: '1.125rem',
-    fontWeight: 600,
-    color: '#111',
-    marginBottom: 8,
-  },
-  emptyDesc: {
-    fontSize: '0.875rem',
-    color: '#6b7280',
-    lineHeight: 1.6,
+  logoutBtn: {
+    padding: '10px 16px',
+    fontSize: '0.8125rem',
+    fontWeight: 500,
+    color: '#ef4444',
+    backgroundColor: 'transparent',
+    border: '1px solid #fecaca',
+    borderRadius: 8,
+    fontFamily: 'inherit',
+    cursor: 'pointer',
   },
   grid: {
     display: 'flex',
@@ -275,18 +267,5 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 8,
     fontFamily: 'inherit',
     cursor: 'pointer',
-  },
-  footer: {
-    marginTop: 32,
-    textAlign: 'center',
-  },
-  backLink: {
-    fontSize: '0.8125rem',
-    color: '#6b7280',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    padding: '4px 0',
   },
 };

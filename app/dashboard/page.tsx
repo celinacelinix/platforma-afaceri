@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useMemo, Suspense, useEffect } from 'react';
+import { useState, useMemo, Suspense, useEffect, useRef, useCallback } from 'react';
 import {
   BarChart, Bar, Cell, XAxis, YAxis, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -1496,6 +1496,8 @@ function DashboardInner() {
   const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [user, setUser] = useState<{ id: string } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -1560,11 +1562,14 @@ function DashboardInner() {
 
   // ── Load project from Supabase ──
   useEffect(() => {
-    if (!proiectIdParam) return;
+    if (!proiectIdParam) {
+      setLoaded(true);
+      return;
+    }
     const supabase = createClient();
     supabase.from('proiecte').select('*').eq('id', proiectIdParam).single()
       .then(({ data, error }) => {
-        if (error || !data) return;
+        if (error || !data) { setLoaded(true); return; }
         const s = data.state as Record<string, unknown>;
         if (s.buget != null) setBuget(s.buget as number);
         if (s.suprafata != null) setSuprafata(s.suprafata as number);
@@ -1581,13 +1586,42 @@ function DashboardInner() {
         if (s.angajati != null) setAngajati(s.angajati as number);
         if (s.salariuMediu != null) setSalariuMediu(s.salariuMediu as number);
         if (s.scenariu) setScenariu(s.scenariu as 'pesimist' | 'realist' | 'optimist');
+        setLoaded(true);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proiectIdParam]);
 
-  // ── Save handler ──
-  const handleSave = async () => {
-    if (!user) return;
+  // ── Auto-create project when arriving from form (no proiect_id) ──
+  useEffect(() => {
+    if (!loaded || !user || proiectId) return;
+    // Only auto-create if we came from the form (has form params in URL)
+    if (!params.get('buget') && !proiectIdParam) return;
+    const supabase = createClient();
+    const projectState = {
+      buget, suprafata, concept, localitate, tipAfacere,
+      meniu: DEFAULT_MENU, cheltuieli: DEFAULT_CHELTUIELI, stocuri: DEFAULT_STOCURI,
+      clientiZi: 80, pierderiPct: 6, rampaMuni: 5, preDeschidereMuni: 3,
+      angajati: 6, salariuMediu: 4000, scenariu: 'realist',
+    };
+    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' · ') || 'Proiect nou';
+    supabase.from('proiecte').insert({
+      user_id: user.id,
+      state: projectState,
+      nume: numeProiect,
+      domeniu: tipAfacere,
+      localitate: localitate || null,
+      platit: true,
+      platit_la: new Date().toISOString(),
+      pret_platit: 149,
+    }).select('id').single().then(({ data }) => {
+      if (data) setProiectId(data.id);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, user]);
+
+  // ── Save function (called by debounce) ──
+  const doSave = useCallback(async () => {
+    if (!user || !proiectId) return;
     setSaveStatus('saving');
     const supabase = createClient();
     const projectState = {
@@ -1596,30 +1630,32 @@ function DashboardInner() {
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu,
     };
     const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' · ') || 'Proiect nou';
-
-    if (proiectId) {
-      // Update existing
-      await supabase.from('proiecte').update({
-        state: projectState,
-        nume: numeProiect,
-        domeniu: tipAfacere,
-        localitate: localitate || null,
-        actualizat_la: new Date().toISOString(),
-      }).eq('id', proiectId);
-    } else {
-      // Create new
-      const { data } = await supabase.from('proiecte').insert({
-        user_id: user.id,
-        state: projectState,
-        nume: numeProiect,
-        domeniu: tipAfacere,
-        localitate: localitate || null,
-      }).select('id').single();
-      if (data) setProiectId(data.id);
-    }
+    await supabase.from('proiecte').update({
+      state: projectState,
+      nume: numeProiect,
+      domeniu: tipAfacere,
+      localitate: localitate || null,
+      actualizat_la: new Date().toISOString(),
+    }).eq('id', proiectId);
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus('idle'), 2000);
-  };
+  }, [user, proiectId, buget, suprafata, concept, localitate, tipAfacere,
+      meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
+      rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu]);
+
+  // ── Auto-save debounce (3s after any data change) ──
+  useEffect(() => {
+    if (!loaded || !user || !proiectId) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      doSave();
+    }, 3000);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buget, suprafata, meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
+      rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu, loaded, proiectId]);
 
   const onConfirmMission = (key: string, val: number) => {
     setMissionStatus(prev => ({ ...prev, [key]: 'verificat' }));
@@ -1684,17 +1720,18 @@ function DashboardInner() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="header-actions">
             <ScenariuSwitcher value={scenariu} onChange={setScenariu} />
+            {user && saveStatus !== 'idle' && (
+              <span style={{
+                fontSize: '0.75rem',
+                color: saveStatus === 'saved' ? '#16a34a' : '#9ca3af',
+                fontWeight: 500,
+              }}>
+                {saveStatus === 'saving' ? '⏳ Se salvează...' : '✓ Salvat'}
+              </span>
+            )}
             {user && (
-              <button
-                onClick={handleSave}
-                disabled={saveStatus === 'saving'}
-                style={{
-                  ...lay.backBtn,
-                  color: saveStatus === 'saved' ? '#16a34a' : '#0f766e',
-                  fontWeight: 600,
-                }}
-              >
-                {saveStatus === 'saving' ? 'Se salvează...' : saveStatus === 'saved' ? 'Salvat ✓' : '💾 Salvează'}
+              <button onClick={() => router.push('/checkout?pret=99')} style={{ ...lay.backBtn, color: '#0f766e', fontWeight: 600 }}>
+                + Proiect nou
               </button>
             )}
             {user && (
@@ -1702,7 +1739,6 @@ function DashboardInner() {
                 📋 Proiectele mele
               </button>
             )}
-            <button onClick={() => router.push('/')} style={lay.backBtn}>← Înapoi</button>
             <button 
               onClick={async () => {
                 const supabase = createClient();
@@ -1871,17 +1907,6 @@ function DashboardInner() {
           <span className="bottom-nav-icon">📄</span>
           <span>Generare PDF</span>
         </button>
-        {user && (
-          <button
-            className="bottom-nav-btn"
-            onClick={handleSave}
-            disabled={saveStatus === 'saving'}
-            style={{ color: saveStatus === 'saved' ? '#16a34a' : '#0f766e' }}
-          >
-            <span className="bottom-nav-icon">💾</span>
-            <span>{saveStatus === 'saving' ? 'Salvez...' : saveStatus === 'saved' ? 'Salvat ✓' : 'Salvează'}</span>
-          </button>
-        )}
         <button
           className="bottom-nav-btn"
           onClick={async () => {

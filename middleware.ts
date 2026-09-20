@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({
             request,
           })
@@ -29,11 +29,13 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
-  const isProiecte = request.nextUrl.pathname.startsWith('/proiecte')
-  const isLogin = request.nextUrl.pathname.startsWith('/login')
+  const path = request.nextUrl.pathname
+  const isProtected = path.startsWith('/dashboard') ||
+                      path.startsWith('/proiecte') ||
+                      path.startsWith('/checkout')
+  const isLogin = path.startsWith('/login')
 
-  if ((isDashboard || isProiecte) && !user) {
+  if (isProtected && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -41,7 +43,7 @@ export async function middleware(request: NextRequest) {
 
   if (isLogin && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/proiecte'
     return NextResponse.redirect(url)
   }
 
