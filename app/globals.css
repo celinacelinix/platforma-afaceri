@@ -186,3 +186,33 @@ input[type='range'].custom-slider::-moz-range-progress {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+@media (max-width: 767px) {
+  .kpi-inner {
+    grid-template-columns: repeat(2, 1fr) !important;
+    padding-left: 16px !important;
+  }
+  .kpi-inner > div {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  /* Remove border right from 2nd and 4th column */
+  .kpi-inner > div:nth-child(2n) {
+    border-right: none !important;
+  }
+}
+
+button {
+  min-height: 44px;
+}
+
+input[type="text"], input[type="number"], textarea, select {
+  width: 100% !important;
+  min-height: 44px;
+}
+
+/* Ensure body doesn't overflow horizontally */
+html, body {
+  overflow-x: hidden;
+}
