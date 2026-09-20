@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "domeniu": "restaurant",
+    "versiune": "0.1-test",
+    "avertisment": "Valori de TEST, coerente pentru validarea motorului. NU sunt date reale colectate."
+  },
+  "model_venit": { "tip": "volum_x_pret_zilnic" },
+  "capacitate": { "mp_per_loc": 1.6, "rotatii_max_zi": 3 },
+  "chirie_per_mp_eur": {
+    "tier_1": { "centru": [20, 40], "rezidential": [10, 20], "periferie": [6, 12] },
+    "tier_3": { "centru": [6, 14], "rezidential": [4, 9], "periferie": [3, 7] }
+  },
+  "marja_neta_referinta": {
+    "interval_realist": [3, 8],
+    "prag_alerta_nerealist": 15
+  },
+  "sensibilitate_variabile": ["pret_mediu", "clienti_zi", "cost_mediu", "cost_personal", "chirie", "pierderi_pct"]
+}
