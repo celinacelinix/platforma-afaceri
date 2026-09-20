@@ -1,12 +1,18 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { isAdmin } from '@/lib/isAdmin';
 
 function CheckoutInner() {
   const params = useSearchParams();
   const router = useRouter();
   const pret = Number(params.get('pret') || 149);
+  const [admin, setAdmin] = useState(false);
+
+  useEffect(() => {
+    isAdmin().then(setAdmin);
+  }, []);
 
   return (
     <main style={styles.page}>
@@ -14,34 +20,52 @@ function CheckoutInner() {
         <div style={styles.iconWrap}>
           <span style={styles.icon}>🚀</span>
         </div>
-        <h1 style={styles.title}>Deblochează planul tău de afaceri</h1>
-        <p style={styles.desc}>
-          Primești un simulator financiar complet, cu plan de afaceri generat de AI,
-          personalizat pentru piața din România.
-        </p>
+        
+        {admin ? (
+          <>
+            <h1 style={styles.title}>Cont admin</h1>
+            <p style={styles.desc}>
+              Plata nu este necesară. Ai acces complet la funcționalitățile platformei.
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{ ...styles.button, backgroundColor: '#0f766e', cursor: 'pointer', opacity: 1 }}
+            >
+              Creează proiect nou
+            </button>
+          </>
+        ) : (
+          <>
+            <h1 style={styles.title}>Deblochează planul tău de afaceri</h1>
+            <p style={styles.desc}>
+              Primești un simulator financiar complet, cu plan de afaceri generat de AI,
+              personalizat pentru piața din România.
+            </p>
 
-        <div style={styles.priceCard}>
-          <span style={styles.priceAmount}>{pret} lei</span>
-          <span style={styles.priceLabel}>per proiect · acces permanent</span>
-        </div>
+            <div style={styles.priceCard}>
+              <span style={styles.priceAmount}>{pret} lei</span>
+              <span style={styles.priceLabel}>per proiect · acces permanent</span>
+            </div>
 
-        <ul style={styles.features}>
-          <li style={styles.feature}>✓ Simulator financiar interactiv</li>
-          <li style={styles.feature}>✓ Plan de afaceri generat cu AI</li>
-          <li style={styles.feature}>✓ Analiză de sensibilitate</li>
-          <li style={styles.feature}>✓ Export PDF</li>
-          <li style={styles.feature}>✓ Salvare și editare nelimitată</li>
-        </ul>
+            <ul style={styles.features}>
+              <li style={styles.feature}>✓ Simulator financiar interactiv</li>
+              <li style={styles.feature}>✓ Plan de afaceri generat cu AI</li>
+              <li style={styles.feature}>✓ Analiză de sensibilitate</li>
+              <li style={styles.feature}>✓ Export PDF</li>
+              <li style={styles.feature}>✓ Salvare și editare nelimitată</li>
+            </ul>
 
-        <button
-          disabled
-          style={styles.button}
-        >
-          Continuă spre plată
-        </button>
-        <p style={styles.hint}>
-          Integrarea cu LemonSqueezy vine în curând
-        </p>
+            <button
+              disabled
+              style={styles.button}
+            >
+              Continuă spre plată (admin - dezactivată)
+            </button>
+            <p style={styles.hint}>
+              Integrarea cu LemonSqueezy vine în curând
+            </p>
+          </>
+        )}
 
         <button
           onClick={() => router.push('/proiecte')}

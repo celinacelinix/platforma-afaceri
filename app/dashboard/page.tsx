@@ -1496,13 +1496,19 @@ function DashboardInner() {
   const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [user, setUser] = useState<{ id: string } | null>(null);
+  const [admin, setAdmin] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (u) setUser({ id: u.id });
+      if (u) {
+        setUser({ id: u.id });
+        import('@/lib/isAdmin').then(({ isAdmin }) => {
+          isAdmin().then(setAdmin);
+        });
+      }
     });
   }, []);
 
@@ -1730,7 +1736,7 @@ function DashboardInner() {
               </span>
             )}
             {user && (
-              <button onClick={() => router.push('/checkout?pret=99')} style={{ ...lay.backBtn, color: '#0f766e', fontWeight: 600 }}>
+              <button onClick={() => router.push(admin ? '/dashboard' : '/checkout?pret=99')} style={{ ...lay.backBtn, color: '#0f766e', fontWeight: 600 }}>
                 + Proiect nou
               </button>
             )}
@@ -1738,6 +1744,11 @@ function DashboardInner() {
               <button onClick={() => router.push('/proiecte')} style={lay.backBtn}>
                 📋 Proiectele mele
               </button>
+            )}
+            {admin && (
+              <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0f766e', backgroundColor: '#ccfbf1', padding: '4px 10px', borderRadius: 999 }}>
+                👑 Admin
+              </span>
             )}
             <button 
               onClick={async () => {

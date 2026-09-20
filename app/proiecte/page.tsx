@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 
+import { isAdmin } from '@/lib/isAdmin';
+
 type Proiect = {
   id: string;
   nume: string;
@@ -18,21 +20,30 @@ export default function ProiectePage() {
   const [proiecte, setProiecte] = useState<Proiect[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     fetchProiecte();
   }, []);
 
   async function fetchProiecte() {
+    const isAdminUser = await isAdmin();
+    setAdmin(isAdminUser);
     const supabase = createClient();
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from('proiecte')
       .select('id, nume, domeniu, localitate, actualizat_la, platit')
-      .eq('platit', true)
       .order('actualizat_la', { ascending: false });
 
+    if (!isAdminUser) {
+      query = query.eq('platit', true);
+    }
+
+    const { data, error } = await query;
+
     if (!error && data) {
-      if (data.length === 0) {
+      if (data.length === 0 && !isAdminUser) {
         // No paid projects → redirect to checkout for first project (149 lei)
         router.replace('/checkout?pret=149');
         return;
@@ -85,7 +96,7 @@ export default function ProiectePage() {
           </div>
           <div style={styles.headerActions}>
             <button
-              onClick={() => router.push('/checkout?pret=99')}
+              onClick={() => router.push(admin ? '/dashboard' : '/checkout?pret=99')}
               className="btn-accent"
               style={styles.newBtn}
             >
@@ -97,7 +108,14 @@ export default function ProiectePage() {
           </div>
         </div>
 
-        <div style={styles.grid}>
+        {proiecte.length === 0 ? (
+          <div style={styles.empty}>
+            <div style={styles.emptyIcon}>📋</div>
+            <p style={styles.emptyTitle}>Niciun proiect salvat</p>
+            <p style={styles.emptyDesc}>Nu ai creat încă niciun proiect.</p>
+          </div>
+        ) : (
+          <div style={styles.grid}>
           {proiecte.map(p => (
             <div key={p.id} style={styles.card}>
               <div style={styles.cardBody}>
@@ -130,7 +148,8 @@ export default function ProiectePage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
     </main>
   );
@@ -190,6 +209,28 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 8,
     fontFamily: 'inherit',
     cursor: 'pointer',
+  },
+  empty: {
+    textAlign: 'center',
+    padding: '60px 24px',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    border: '1px solid #e5e7eb',
+  },
+  emptyIcon: {
+    fontSize: '2.5rem',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: '1.125rem',
+    fontWeight: 600,
+    color: '#111',
+    marginBottom: 8,
+  },
+  emptyDesc: {
+    fontSize: '0.875rem',
+    color: '#6b7280',
+    lineHeight: 1.6,
   },
   grid: {
     display: 'flex',
