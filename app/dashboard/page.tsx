@@ -183,7 +183,7 @@ function KpiBar({
   venitLunar: number; profitNet: number; pragRupere: number | null; cashMinim: number;
 }) {
   return (
-    <div style={lay.kpiBar}>
+    <div style={lay.kpiBar} className="kpi-bar-container">
       <div style={lay.kpiInner} className="kpi-inner">
         <KpiCell label="Venit lunar"   value={`${fmt(venitLunar)} lei`}  />
         <KpiCell label="Profit net"    value={`${fmt(profitNet)} lei`}   accent={profitNet > 0} />
@@ -1399,7 +1399,7 @@ function ConfidenceBar({ missionStatus, sensibilitate }: { missionStatus: Record
       <div style={{ height: 6, backgroundColor: '#f3f4f6', borderRadius: 999, overflow: 'hidden', maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ height: '100%', backgroundColor: color, width: `${pct}%`, transition: 'all 0.5s ease' }} />
       </div>
-      <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '12px 0 4px', maxWidth: 1200, margin: '0 auto', scrollbarWidth: 'none' }}>
+      <div className="missions-wrapper" style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '12px 0 4px', maxWidth: 1200, margin: '0 auto', scrollbarWidth: 'none' }}>
         {sortedKeys.map(k => {
           const isVerified = missionStatus[k] === 'verificat';
           return (
@@ -1575,7 +1575,7 @@ function DashboardInner() {
   const activeChapterObj = CHAPTERS.find(ch => ch.id === activeChapter)!;
 
   return (
-    <div style={lay.root}>
+    <div style={lay.root} className="dashboard-root">
       {/* ── KPI bar (fixed top) ── */}
       <KpiBar
         venitLunar={rez.venitLunar as number}

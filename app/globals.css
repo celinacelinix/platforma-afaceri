@@ -253,3 +253,47 @@ html, body {
     white-space: nowrap;
   }
 }
+
+@media (max-width: 480px) {
+  /* PROBLEMA 1: Bara de capitole se suprapune peste kpi-bar */
+  .kpi-bar-container {
+    height: 104px !important;
+    align-items: flex-start !important;
+  }
+  .mobile-strip-wrapper {
+    top: 104px !important;
+  }
+  .dashboard-root {
+    padding-top: 104px !important;
+  }
+
+  /* PROBLEMA 2: Simulator financiar & Inapoi aliniate gresit */
+  .page-header-inner {
+    padding: 16px !important; /* override paddingLeft: 248px from inline style */
+  }
+  .page-header-inner > div:first-child {
+    text-align: left !important;
+    width: 100%;
+  }
+  .header-actions button:last-child {
+    text-align: left !important;
+    width: 100%;
+  }
+
+  /* PROBLEMA 3: Butoanele Pesimist/Realist/Optimist taiate */
+  .scenariu-switcher button {
+    flex: 1;
+    min-height: 36px !important;
+    font-size: 0.65rem !important;
+    padding: 4px 2px !important;
+    white-space: nowrap;
+    letter-spacing: -0.02em;
+  }
+
+  /* PROBLEMA 4: Misiunile taiate */
+  .missions-wrapper {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    gap: 8px !important;
+  }
+}
