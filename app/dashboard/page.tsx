@@ -1504,6 +1504,7 @@ function DashboardInner() {
   const allNarrativeCompleted = narrativeChapters.every(nr => chapterCompletion[nr]);
 
   const [showFullPlanPreview, setShowFullPlanPreview] = useState(false);
+  const [showChapterDrawer, setShowChapterDrawer] = useState(false);
   const [fullPlanText, setFullPlanText] = useState("");
 
   const handleAssembleFullPlan = () => {
@@ -1729,6 +1730,48 @@ function DashboardInner() {
           </div>
         </div>
       )}
+
+      {/* ── Bottom Nav Mobile ── */}
+      <div className="bottom-nav-mobile">
+        <button
+          className={`bottom-nav-btn ${activeChapter === 7 ? 'active' : ''}`}
+          onClick={() => { setActiveChapter(7); setShowChapterDrawer(false); }}
+        >
+          <span className="bottom-nav-icon">📊</span>
+          <span>Estimare financiară</span>
+        </button>
+        <button
+          className={`bottom-nav-btn ${showChapterDrawer ? 'active' : ''}`}
+          onClick={() => setShowChapterDrawer(true)}
+        >
+          <span className="bottom-nav-icon">📋</span>
+          <span>Capitole</span>
+        </button>
+      </div>
+
+      {/* ── Chapter Drawer Mobile ── */}
+      <div className={`chapter-drawer-overlay ${showChapterDrawer ? 'open' : ''}`} onClick={() => setShowChapterDrawer(false)} />
+      <div className={`chapter-drawer ${showChapterDrawer ? 'open' : ''}`}>
+        <div className="drawer-handle" />
+        <ul className="drawer-list">
+          {CHAPTERS.map(ch => {
+            const isActive = ch.id === activeChapter;
+            return (
+              <li key={ch.id}>
+                <button
+                  onClick={() => { setActiveChapter(ch.id); setShowChapterDrawer(false); }}
+                  className={`drawer-item ${isActive ? 'active' : ''}`}
+                >
+                  <StatusDot status={statuses[ch.id]} />
+                  <span className="drawer-num">{ch.id}.</span>
+                  <span className="drawer-title">{ch.title}</span>
+                  <span className="drawer-arrow">→</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
     </div>
   );
