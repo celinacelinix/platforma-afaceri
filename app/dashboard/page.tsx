@@ -1557,6 +1557,16 @@ function DashboardInner() {
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [showUnlockedToast, setShowUnlockedToast] = useState(false);
 
+  const handleUnlock = useCallback(() => {
+    const currentParams = params.toString();
+    if (!user) {
+      const checkoutUrl = encodeURIComponent(`/checkout?pret=149&${currentParams}`);
+      router.push(`/login?next=${checkoutUrl}`);
+    } else {
+      router.push(`/checkout?pret=149&${currentParams}`);
+    }
+  }, [user, params, router]);
+
   useEffect(() => {
     // If the user just arrived and is logged in + paid, maybe show a toast if we want to.
     // The prompt says "Un mesaj verde discret timp de 3 secunde: ✓ Simulare deblocată — bine ai venit!"
@@ -2059,7 +2069,7 @@ function DashboardInner() {
               <span className="preview-banner-title">🔓 Deblochează simularea completă</span>
               <span className="preview-banner-sub">Raport complet + toate cifrele + export PDF</span>
             </div>
-            <button className="preview-banner-btn" onClick={() => router.push('/checkout?pret=149')}>
+            <button className="preview-banner-btn" onClick={handleUnlock}>
               149 lei — Începe acum
             </button>
           </div>
@@ -2086,7 +2096,7 @@ function DashboardInner() {
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
               <button
-                onClick={() => router.push('/checkout?pret=149')}
+                onClick={handleUnlock}
                 style={{
                   width: '100%', padding: '12px', backgroundColor: '#0f766e', color: 'white',
                   border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '1rem', cursor: 'pointer'

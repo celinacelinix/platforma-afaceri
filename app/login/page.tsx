@@ -1,23 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase';
 
-export default function LoginPage() {
+function LoginInner() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const searchParams = useSearchParams();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage('');
     
+    const nextUrl = searchParams.get('next') || '/proiecte';
+    
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
       },
     });
 
@@ -79,6 +83,18 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main style={styles.page}>
+        <p style={{ color: '#6b7280' }}>Se încarcă…</p>
+      </main>
+    }>
+      <LoginInner />
+    </Suspense>
   );
 }
 
