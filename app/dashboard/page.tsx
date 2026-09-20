@@ -1761,11 +1761,12 @@ const SIDE_W = 224;  // px — sidebar width
 
 const lay: Record<string, React.CSSProperties> = {
   root: {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-    display: 'flex',
-    flexDirection: 'column',
-  },
+      minHeight: '100vh',
+      backgroundColor: '#f9fafb',
+      display: 'flex',
+      flexDirection: 'column',
+      paddingTop: KPI_H,
+    },
 
   // Fixed KPI bar
   kpiBar: {
@@ -1853,7 +1854,7 @@ const lay: Record<string, React.CSSProperties> = {
   pageHeader: {
     backgroundColor: '#fff',
     borderBottom: '1px solid #e5e7eb',
-    marginTop: KPI_H,
+    /* marginTop removed for mobile fix */
     height: HDR_H,
     flexShrink: 0,
   },
@@ -2136,7 +2137,7 @@ const sl: Record<string, React.CSSProperties> = {
 
 const t: Record<string, React.CSSProperties> = {
   tableWrap: { overflowX: 'auto' as const },
-  table:     { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
+  table:     { width: '100%', minWidth: 500, borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
   thLeft:    { textAlign: 'left' as const,  padding: '0 8px 10px 0', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', borderBottom: '1px solid #e5e7eb' },
   thRight:   { textAlign: 'right' as const, padding: '0 8px 10px',   fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' as const },
   thDel:     { padding: '0 0 10px', borderBottom: '1px solid #e5e7eb', width: 28 },
@@ -2157,7 +2158,7 @@ const t: Record<string, React.CSSProperties> = {
 
 const cc: Record<string, React.CSSProperties> = {
   tableWrap:     { overflowX: 'auto' as const },
-  table:         { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
+  table:         { width: '100%', minWidth: 500, borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
   thCat:         { width: 12, padding: '0 0 10px', borderBottom: '1px solid #e5e7eb' },
   thLeft:        { textAlign: 'left' as const,  padding: '0 8px 10px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', borderBottom: '1px solid #e5e7eb' },
   thRight:       { textAlign: 'right' as const, padding: '0 8px 10px', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' as const },
@@ -2188,7 +2189,7 @@ const cc: Record<string, React.CSSProperties> = {
 const sk: Record<string, React.CSSProperties> = {
   explainer: { fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic', marginBottom: 16 },
   tableWrap: { overflowX: 'auto' as const },
-  table:     { width: '100%', borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
+  table:     { width: '100%', minWidth: 500, borderCollapse: 'collapse' as const, fontSize: '0.875rem' },
   thLeft:    { textAlign: 'left' as const,  padding: '0 8px 10px 0', fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', borderBottom: '1px solid #e5e7eb' },
   thRight:   { textAlign: 'right' as const, padding: '0 8px 10px',   fontWeight: 600, fontSize: '0.75rem', color: '#6b7280', borderBottom: '1px solid #e5e7eb', whiteSpace: 'nowrap' as const },
   thDel:     { width: 28, padding: '0 0 10px', borderBottom: '1px solid #e5e7eb' },

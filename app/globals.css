@@ -236,10 +236,20 @@ html, body {
   }
   .scenariu-switcher {
     width: 100%;
-    flex-direction: column !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    gap: 4px !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scenariu-switcher::-webkit-scrollbar {
+    display: none;
   }
   .scenariu-switcher button {
-    width: 100%;
+    flex: 1;
     min-height: 44px;
+    font-size: 0.75rem !important;
+    padding: 6px 4px !important;
+    white-space: nowrap;
   }
 }
