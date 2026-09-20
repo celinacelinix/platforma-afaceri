@@ -35,11 +35,11 @@ export default function LoginPage() {
         <div style={styles.header}>
           <div style={styles.logo}>planurideafaceri.ro</div>
         </div>
-        <h1 style={styles.title}>Intră în cont</h1>
+        <h1 style={styles.title}>Intră sau creează un cont</h1>
 
         <form style={{ width: '100%' }} onSubmit={handleSubmit} noValidate>
           <div style={styles.field}>
-            <label style={styles.label} htmlFor="email">Email</label>
+            <label style={styles.label} htmlFor="email">Adresă de email</label>
             <input 
               id="email" 
               name="email" 
@@ -58,11 +58,12 @@ export default function LoginPage() {
             style={styles.button}
             disabled={loading}
           >
-            {loading ? 'Se trimite...' : 'Trimite link de acces'}
+            {loading ? 'Se trimite...' : 'Trimite link-ul magic'}
           </button>
           
           <div style={styles.hintText}>
-            Vei primi un email cu link de autentificare
+            Dacă nu ai cont, vom crea unul automat pentru tine.<br />
+            Vei primi un link sigur prin care intri direct, fără parole.
           </div>
 
           {message && (
@@ -158,6 +159,7 @@ const styles: Record<string, React.CSSProperties> = {
   hintText: {
     marginTop: '1rem',
     fontSize: '0.8rem',
+    lineHeight: '1.4',
     color: '#6b7280',
     textAlign: 'center',
     width: '100%',
