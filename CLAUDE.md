@@ -19,6 +19,12 @@ Monedă: lei peste tot.
 - Mobile-friendly la orice componentă nouă
 - La modificări la engine.js, rulează testele după
 
+## Backup obligatoriu
+La ÎNCEPUTUL oricărui prompt, înainte de orice modificare,
+rulează întotdeauna:
+git add . && git commit -m "backup inainte de [descriere scurtă]"
+Fără excepții. Dacă există "nothing to commit" — continuă.
+
 ## REGULA ABSOLUTĂ — DIACRITICE
 NICIODATĂ nu modifica, converti, înlocui sau 
 "repara" diacriticele românești.
