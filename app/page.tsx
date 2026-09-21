@@ -24,14 +24,68 @@ const initialForm: FormData = {
 
 import { createBrowserClient } from '@supabase/ssr';
 
+const SIM_CONFIG = {
+  restaurant: {
+    volum: 80, pret: 45, chirie: 5000,
+    cost_variabil_pct: 35, personal: 18000,
+    unitateVolum: 'clienți', zile: 28,
+    volumMin: 20, volumMax: 200, pretMin: 20, pretMax: 150
+  },
+  salon: {
+    volum: 15, pret: 120, chirie: 2500,
+    cost_variabil_pct: 25, personal: 8000,
+    unitateVolum: 'clienți', zile: 26,
+    volumMin: 5, volumMax: 50, pretMin: 50, pretMax: 300
+  },
+  magazin_online: {
+    volum: 20, pret: 180, chirie: 0,
+    cost_variabil_pct: 45, personal: 5000,
+    unitateVolum: 'comenzi', zile: 30,
+    volumMin: 5, volumMax: 100, pretMin: 50, pretMax: 500
+  },
+  constructii: {
+    volum: 3, pret: 8000, chirie: 1500,
+    cost_variabil_pct: 55, personal: 25000,
+    unitateVolum: 'proiecte', zile: 1,
+    volumMin: 1, volumMax: 15, pretMin: 2000, pretMax: 20000
+  },
+  servicii: {
+    volum: 10, pret: 300, chirie: 2000,
+    cost_variabil_pct: 20, personal: 10000,
+    unitateVolum: 'clienți', zile: 22,
+    volumMin: 3, volumMax: 30, pretMin: 100, pretMax: 1000
+  }
+};
+
 export default function LandingPage() {
   const [form, setForm] = useState<FormData>(initialForm);
   const router = useRouter();
-
   // Mini-simulator state
-  const [simClienti, setSimClienti] = useState(80);
-  const [simPret, setSimPret] = useState(45);
+  const [simTip, setSimTip] = useState<keyof typeof SIM_CONFIG>('restaurant');
   const [simLocalitate, setSimLocalitate] = useState('București');
+  const [simVolum, setSimVolum] = useState(80);
+  const [simPret, setSimPret] = useState(45);
+
+  const handleSimTipChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const tip = e.target.value as keyof typeof SIM_CONFIG;
+    setSimTip(tip);
+    setSimVolum(SIM_CONFIG[tip].volum);
+    setSimPret(SIM_CONFIG[tip].pret);
+  };
+
+  const cfg = SIM_CONFIG[simTip];
+  const simVenit = simVolum * simPret * cfg.zile;
+  const simCostVar = simVenit * (cfg.cost_variabil_pct / 100);
+  const simCostFix = cfg.chirie + cfg.personal;
+  const simCostTotal = simCostVar + simCostFix;
+  const simProfit = simVenit - simCostTotal;
+  const simBreakeven = simCostFix / (simPret * (1 - cfg.cost_variabil_pct/100));
+  const simCashStart = simCostFix * 3;
+
+  let verdictStatus = 'dificil';
+  if (simProfit > simVenit * 0.15) verdictStatus = 'promitator';
+  else if (simProfit > 0) verdictStatus = 'moderat';
+
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -99,7 +153,11 @@ export default function LandingPage() {
           .aha-cards, .diff-cards, .pricing-grid { grid-template-columns: 1fr !important; }
           .footer-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
           .footer-right { flex-direction: column; gap: 12px; }
-          .mini-sim-inner { flex-direction: column !important; }
+                    .mini-sim-inner { flex-direction: column !important; }
+          .simRow2x2 { grid-template-columns: 1fr !important; }
+          .simVisibleCardsGrid { grid-template-columns: 1fr !important; }
+          .simBlurredCardsRow { grid-template-columns: 1fr !important; }
+          .simChartWrap svg { height: 80px !important; }
           .sim-col { width: 100% !important; border-right: none !important; border-bottom: 1px solid #e2e8f0; }
           .table-wrapper { overflow-x: auto; }
         }
@@ -225,84 +283,161 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* MINI-SIMULATOR LIVE SECTION */}
+            {/* MINI-SIMULATOR AVANSAT */}
       <section style={styles.simSection}>
         <div style={styles.simInner}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Joacă-te cu cifrele. Acesta e doar începutul.</h2>
+            <h2 style={styles.sectionTitle}>Vezi instant dacă ideea ta are șanse.</h2>
+            <p style={styles.sectionSubtitle}>Mișcă sliderele și urmărește cum se schimbă verdictul.</p>
           </div>
           
-          <div style={styles.simCard}>
-            <div className="mini-sim-inner" style={styles.simCardInner}>
-              <div className="sim-col" style={styles.simControls}>
-                <div style={styles.simControlGrp}>
-                  <div style={styles.simControlHeader}>
-                    <label style={styles.simLabel}>Clienți pe zi</label>
-                    <span style={styles.simValue}>{simClienti} clienți/zi</span>
+          <div style={styles.simCardAdv}>
+            {/* Header Card */}
+            <div style={styles.simCardHeader}>
+              <span>{simTip === 'magazin_online' ? 'Magazin online' : simTip.charAt(0).toUpperCase() + simTip.slice(1)}</span>
+              <span> &middot; </span>
+              <span>{simLocalitate}</span>
+              <span> &middot; </span>
+              <span>{simVolum} {cfg.unitateVolum}/zi</span>
+            </div>
+
+            <div className="mini-sim-inner" style={styles.simCardInnerAdv}>
+              {/* Controale (stânga) */}
+              <div className="sim-col" style={styles.simControlsAdv}>
+                <div style={styles.simRow2x2}>
+                  <div style={styles.simControlGrp}>
+                    <label style={styles.simLabel}>Tip afacere</label>
+                    <select value={simTip} onChange={handleSimTipChange} style={styles.select}>
+                      <option value="restaurant">Restaurant</option>
+                      <option value="salon">Salon</option>
+                      <option value="magazin_online">Magazin online</option>
+                      <option value="constructii">Construcții</option>
+                      <option value="servicii">Servicii profesionale</option>
+                    </select>
                   </div>
-                  <input type="range" min={20} max={200} value={simClienti} 
-                    onChange={e => setSimClienti(Number(e.target.value))} style={styles.simRange} />
+                  <div style={styles.simControlGrp}>
+                    <label style={styles.simLabel}>Localitate</label>
+                    <select value={simLocalitate} onChange={e => setSimLocalitate(e.target.value)} style={styles.select}>
+                      <option value="București">București</option>
+                      <option value="Cluj-Napoca">Cluj-Napoca</option>
+                      <option value="Iași">Iași</option>
+                      <option value="Timișoara">Timișoara</option>
+                      <option value="Brașov">Brașov</option>
+                      <option value="Alt oraș">Alt oraș</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div style={styles.simControlGrp}>
-                  <div style={styles.simControlHeader}>
-                    <label style={styles.simLabel}>Preț mediu</label>
-                    <span style={styles.simValue}>{simPret} lei</span>
+                <div style={styles.simRow2x2}>
+                  <div style={styles.simControlGrp}>
+                    <div style={styles.simControlHeader}>
+                      <label style={styles.simLabel}>{cfg.unitateVolum.charAt(0).toUpperCase() + cfg.unitateVolum.slice(1)}/{simTip === 'constructii' ? 'lună' : 'zi'}</label>
+                      <span style={styles.simValue}>{simVolum}</span>
+                    </div>
+                    <input type="range" min={cfg.volumMin} max={cfg.volumMax} value={simVolum} 
+                      onChange={e => setSimVolum(Number(e.target.value))} style={styles.simRange} />
                   </div>
-                  <input type="range" min={20} max={150} value={simPret} 
-                    onChange={e => setSimPret(Number(e.target.value))} style={styles.simRange} />
-                </div>
-
-                <div style={styles.simControlGrp}>
-                  <label style={styles.simLabel}>Localitate</label>
-                  <select value={simLocalitate} onChange={e => setSimLocalitate(e.target.value)} style={styles.select}>
-                    <option value="București">București</option>
-                    <option value="Cluj-Napoca">Cluj-Napoca</option>
-                    <option value="Iași">Iași</option>
-                    <option value="Timișoara">Timișoara</option>
-                    <option value="Brașov">Brașov</option>
-                  </select>
+                  <div style={styles.simControlGrp}>
+                    <div style={styles.simControlHeader}>
+                      <label style={styles.simLabel}>Preț mediu (lei)</label>
+                      <span style={styles.simValue}>{simPret}</span>
+                    </div>
+                    <input type="range" min={cfg.pretMin} max={cfg.pretMax} step={simTip === 'constructii' ? 100 : 5} value={simPret} 
+                      onChange={e => setSimPret(Number(e.target.value))} style={styles.simRange} />
+                  </div>
                 </div>
               </div>
 
-              <div className="sim-col" style={styles.simResults}>
-                <div style={styles.simVisibleCard}>
-                  <div style={styles.simResLabel}>Venit lunar estimat</div>
-                  <div style={styles.simResValue}>{(simClienti * simPret * 28).toLocaleString('ro-RO')} lei</div>
-                  <div style={styles.simResNote}>bazat pe 28 zile lucrătoare</div>
+              {/* Rezultate Vizibile (dreapta) */}
+              <div className="sim-col" style={styles.simResultsAdv}>
+                <div style={styles.simVisibleCardsGrid}>
+                  <div style={styles.simVisibleCardMini}>
+                    <div style={styles.simResLabelMicro}>VENIT LUNAR ESTIMAT</div>
+                    <div style={{...styles.simResValueMicro, color: '#0f766e'}}>{Math.round(simVenit).toLocaleString('ro-RO')} lei</div>
+                    <div style={styles.simResNoteMicro}>la {simVolum} {cfg.unitateVolum}/{simTip === 'constructii' ? 'lună' : 'zi'}</div>
+                  </div>
+                  <div style={styles.simVisibleCardMini}>
+                    <div style={styles.simResLabelMicro}>COSTURI ESTIMATE</div>
+                    <div style={{...styles.simResValueMicro, color: '#1a1a2e'}}>{Math.round(simCostTotal).toLocaleString('ro-RO')} lei</div>
+                    <div style={styles.simResNoteMicro}>fixe {Math.round(simCostFix).toLocaleString('ro-RO')} + var {Math.round(simCostVar).toLocaleString('ro-RO')}</div>
+                  </div>
                 </div>
-
-                <div style={styles.simBlurredWrap}>
-                  <div style={styles.simBlurredCard}>
-                    <div style={styles.simResLabel}>Profit net lunar</div>
-                    <div style={styles.simResValue}>*** lei</div>
+                
+                <div style={{
+                  ...styles.simVerdictCard,
+                  backgroundColor: verdictStatus === 'promitator' ? '#f0fdf4' : verdictStatus === 'moderat' ? '#fffbeb' : '#fef2f2',
+                  borderColor: verdictStatus === 'promitator' ? '#dcfce7' : verdictStatus === 'moderat' ? '#fef3c7' : '#fee2e2'
+                }}>
+                  <div style={{...styles.simResLabelMicro, color: '#4b5563', marginBottom: 4}}>VERDICT</div>
+                  <div style={{
+                    fontSize: '1.25rem', fontWeight: 800,
+                    color: verdictStatus === 'promitator' ? '#166534' : verdictStatus === 'moderat' ? '#b45309' : '#991b1b'
+                  }}>
+                    {verdictStatus === 'promitator' ? '🟢 Promițător' : verdictStatus === 'moderat' ? '🟡 Risc moderat' : '🔴 Dificil'}
                   </div>
-                  <div style={styles.simBlurredCard}>
-                    <div style={styles.simResLabel}>Luna de breakeven</div>
-                    <div style={styles.simResValue}>Luna **</div>
-                  </div>
-                  <div style={styles.simBlurredCard}>
-                    <div style={styles.simResLabel}>Cash minim necesar</div>
-                    <div style={styles.simResValue}>*** lei</div>
-                  </div>
-                  <div style={styles.simOverlay}>
-                    <span style={styles.simOverlayText}>🔒 Disponibil după deblocare</span>
+                  <div style={{...styles.simResNoteMicro, color: '#4b5563', marginTop: 4}}>
+                    {verdictStatus === 'promitator' ? 'Marja estimată e sănătoasă' : verdictStatus === 'moderat' ? 'Marja e strânsă, detaliile contează' : 'La parametrii actuali, costurile depășesc venitul'}
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Grafic si Carduri Blurate */}
+            <div style={styles.simBlurredSection} onClick={scrollToForm}>
+              <div style={styles.simBlurredOverlay}>
+                <div style={styles.simOverlayPill}>
+                  <span>🔒</span> Evoluția cash-flow-ului pe 12 luni
+                  <div style={{fontSize: '0.75rem', color: '#6b7280', fontWeight: 500, marginTop: 4}}>Disponibil în raportul complet</div>
+                </div>
+              </div>
+
+              {/* Chart SVG (blured) */}
+              <div style={styles.simChartWrap}>
+                <svg width="100%" height="120" preserveAspectRatio="none" viewBox="0 0 120 100">
+                  {[...Array(12)].map((_, i) => {
+                    const isNeg = i < 3;
+                    const h = isNeg ? 20 + i*10 : 10 + (i-3)*10;
+                    const y = isNeg ? 50 : 50 - h;
+                    return (
+                      <rect key={i} x={i * 10 + 2} y={y} width="6" height={h} fill={isNeg ? '#ef4444' : '#10b981'} rx="1" />
+                    );
+                  })}
+                  <line x1="0" y1="50" x2="120" y2="50" stroke="#cbd5e1" strokeWidth="1" />
+                </svg>
+              </div>
+
+              <div className="sim-blurred-cards" style={styles.simBlurredCardsRow}>
+                <div style={styles.simBlurCard}>
+                  <div style={styles.simResLabel}>Profit net lunar</div>
+                  <div style={styles.simResValueBlur}>{Math.round(simProfit).toLocaleString('ro-RO')} lei</div>
+                  <div style={styles.simBlurCardOverlay}>🔒 Deblocat</div>
+                </div>
+                <div style={styles.simBlurCard}>
+                  <div style={styles.simResLabel}>Prag de rentabilitate</div>
+                  <div style={styles.simResValueBlur}>{Math.ceil(simBreakeven)} {cfg.unitateVolum}/zi</div>
+                  <div style={styles.simBlurCardOverlay}>🔒 Deblocat</div>
+                </div>
+                <div style={styles.simBlurCard}>
+                  <div style={styles.simResLabel}>Cash necesar la start</div>
+                  <div style={styles.simResValueBlur}>{Math.round(simCashStart).toLocaleString('ro-RO')} lei</div>
+                  <div style={styles.simBlurCardOverlay}>🔒 Deblocat</div>
+                </div>
+              </div>
+            </div>
+            
           </div>
           
           <div style={styles.simActionWrap}>
-            <button onClick={scrollToForm} className="btn-accent" style={styles.simBtn}>
-              Vezi toate cifrele — 149 lei →
+            <button onClick={scrollToForm} className="btn-accent" style={{...styles.simBtn, width: '100%', maxWidth: '400px'}}>
+              Vezi verdictul complet — 149 lei →
             </button>
             <p style={styles.simActionHint}>
-              Completează datele reale ale afacerii tale și obține verdictul complet
+              Completează datele reale ale afacerii tale și obține analiza completă pe 24 de luni
             </p>
           </div>
         </div>
       </section>
+
 
       {/* DE CE SUNTEM DIFERITI */}
       <section style={styles.diffSection}>
@@ -897,6 +1032,152 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     color: 'white',
     boxShadow: '0 4px 6px rgba(15,118,110,0.2)'
+  },
+    simCardAdv: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden',
+    marginBottom: '32px',
+    maxWidth: '900px',
+    margin: '0 auto 32px auto'
+  },
+  simCardHeader: {
+    padding: '12px 24px',
+    borderBottom: '1px solid #e2e8f0',
+    fontSize: '0.8125rem',
+    color: '#6b7280',
+    fontWeight: 600,
+    backgroundColor: '#f8fafc',
+    textAlign: 'center'
+  },
+  simCardInnerAdv: {
+    display: 'flex',
+    flexDirection: 'row',
+    borderBottom: '1px solid #e2e8f0'
+  },
+  simControlsAdv: {
+    width: '55%',
+    padding: '24px',
+    backgroundColor: '#ffffff',
+    borderRight: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  },
+  simRow2x2: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '16px'
+  },
+  simResultsAdv: {
+    width: '45%',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    backgroundColor: '#f8fafc'
+  },
+  simVisibleCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px'
+  },
+  simVisibleCardMini: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '16px',
+    textAlign: 'center'
+  },
+  simResLabelMicro: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    marginBottom: '4px'
+  },
+  simResValueMicro: {
+    fontSize: '1.25rem',
+    fontWeight: 800,
+    marginBottom: '2px'
+  },
+  simResNoteMicro: {
+    fontSize: '0.7rem',
+    color: '#6b7280',
+    fontWeight: 500
+  },
+  simVerdictCard: {
+    border: '1px solid #e2e8f0',
+    borderRadius: '10px',
+    padding: '16px',
+    textAlign: 'center',
+    transition: 'all 0.3s'
+  },
+  simBlurredSection: {
+    position: 'relative',
+    padding: '32px 24px',
+    backgroundColor: '#ffffff',
+    cursor: 'pointer'
+  },
+  simBlurredOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10
+  },
+  simOverlayPill: {
+    backgroundColor: '#ffffff',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    fontSize: '0.9375rem',
+    fontWeight: 600,
+    color: '#1f2937',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    textAlign: 'center',
+    border: '1px solid #f1f5f9'
+  },
+  simChartWrap: {
+    filter: 'blur(6px)',
+    marginBottom: '24px'
+  },
+  simBlurredCardsRow: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '16px'
+  },
+  simBlurCard: {
+    backgroundColor: '#f9fafb',
+    border: '1px solid #f1f5f9',
+    borderRadius: '12px',
+    padding: '16px',
+    textAlign: 'center',
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  simResValueBlur: {
+    fontSize: '1.5rem',
+    fontWeight: 800,
+    color: '#111827',
+    filter: 'blur(8px)',
+    pointerEvents: 'none',
+    userSelect: 'none'
+  },
+  simBlurCardOverlay: {
+    position: 'absolute',
+    top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+    fontSize: '0.85rem',
+    fontWeight: 700,
+    color: '#4b5563',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
   },
   simActionHint: {
     fontSize: '0.875rem',
