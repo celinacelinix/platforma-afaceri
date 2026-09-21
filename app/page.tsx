@@ -619,7 +619,6 @@ export default function LandingPage() {
             </div>
 
             <div style={styles.pricingCard}>
-              <div style={styles.pricingBadgeAlt}>Add-on</div>
               <h3 style={styles.pricingCardTitle}>EXTRA</h3>
               <div style={styles.pricingPrice}>99 Lei <span style={styles.pricingPerDomain}>/ domeniu</span></div>
               <div style={styles.pricingSubprice}>necesită Pachetul Start</div>
@@ -632,7 +631,6 @@ export default function LandingPage() {
             </div>
 
             <div style={styles.pricingCard}>
-              <div style={styles.pricingBadgeAlt}>Antreprenori în serie</div>
               <h3 style={styles.pricingCardTitle}>BULK / PRO</h3>
               <div style={styles.pricingPrice}>299 Lei</div>
               <div style={styles.pricingSubprice}>plată unică</div>
@@ -645,7 +643,6 @@ export default function LandingPage() {
             </div>
 
                         <div style={styles.pricingCard}>
-              <div style={styles.pricingBadgeAlt}>Alt domeniu</div>
               <h3 style={styles.pricingCardTitle}>Domeniu personalizat</h3>
               <p style={{ fontSize: '0.85rem', color: '#4b5563', lineHeight: 1.5, marginBottom: '16px', marginTop: '-8px' }}>
                 Domeniul tău nu e în listă, dar motorul nostru funcționează pentru orice activitate. Tu introduci costurile, prețurile și volumul estimat, iar motorul calculează cash-flow-ul, pragul de rentabilitate și planul de exit.
