@@ -35,11 +35,14 @@ export async function middleware(request: NextRequest) {
                       path.startsWith('/dashboard')
   const isLogin = path.startsWith('/login')
 
+  // TODO: RE-ACTIVEAZĂ AUTENTIFICAREA ÎNAINTE DE LANSARE
+  /*
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
+  */
 
   if (isLogin && user) {
     const url = request.nextUrl.clone()

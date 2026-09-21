@@ -1542,12 +1542,12 @@ function DashboardInner() {
 
   const handleUnlock = useCallback(() => {
     const currentParams = params.toString();
-    if (!user) {
-      const checkoutUrl = encodeURIComponent(`/checkout?pret=149&${currentParams}`);
-      router.push(`/login?next=${checkoutUrl}`);
-    } else {
+    // TODO: RE-ACTIVEAZĂ AUTENTIFICAREA ÎNAINTE DE LANSARE
+    // if (!user) { ... }
+    //   router.push(...)
+    // } else {
       router.push(`/checkout?pret=149&${currentParams}`);
-    }
+    // }
   }, [user, params, router]);
 
   useEffect(() => {

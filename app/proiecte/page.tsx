@@ -43,11 +43,12 @@ export default function ProiectePage() {
     const { data, error } = await query;
 
     if (!error && data) {
-      if (data.length === 0 && !isAdminUser) {
-        // No paid projects → redirect to checkout for first project (149 lei)
-        router.replace('/checkout?pret=149');
-        return;
-      }
+      // TODO: RE-ACTIVEAZĂ AUTENTIFICAREA ÎNAINTE DE LANSARE
+      //       if (data.length === 0 && !isAdminUser) {
+      //         // No paid projects → redirect to checkout for first project (149 lei)
+      //         router.replace('/checkout?pret=149');
+      //         return;
+      //       }
       setProiecte(data);
     }
     setLoading(false);
