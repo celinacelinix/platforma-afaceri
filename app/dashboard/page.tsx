@@ -10,6 +10,7 @@ import engine from '@/engine/src/engine.js';
 import verdict from '@/engine/src/verdict.js';
 import config from '@/engine/configs/restaurant.test.json';
 import Capitol, { FieldDef } from '../components/Capitol';
+import Capitol2Ghidat from '../components/Capitol2Ghidat';
 
 import {
   asambleazaCapitol1, asambleazaCapitol2, asambleazaCapitol3,
@@ -1524,6 +1525,18 @@ function DashboardInner() {
   const [localitate, setLocalitate] = useState(localitateParam);
   const [tipAfacere, setTipAfacere] = useState(tipAfacereParam);
 
+  const [descriere, setDescriere] = useState<any>({
+    concept_tip: '',
+    concept_personalizat: '',
+    public_tinta: [],
+    public_personalizat: '',
+    diferentiator: [],
+    diferentiator_personalizat: '',
+    text_generat: '',
+    text_final: '',
+    status: 'none'
+  });
+
   const [user, setUser] = useState<any>(null);
   useEffect(() => { const supabase = createClient(); supabase.auth.getUser().then(({ data }) => setUser(data.user)); }, []);
   // TODO: REACTIVEAZĂ VERIFICAREA DE ACCES ÎNAINTE DE LANSARE
@@ -1630,6 +1643,7 @@ function DashboardInner() {
         if (s.concept != null) setConcept(s.concept as string);
         if (s.localitate != null) setLocalitate(s.localitate as string);
         if (s.tipAfacere != null) setTipAfacere(s.tipAfacere as string);
+        if (s.descriere) setDescriere(s.descriere as any);
         if (s.meniu) setMeniu(s.meniu as MenuItem[]);
         if (s.cheltuieli) setCheltuieli(s.cheltuieli as CheltuialaItem[]);
         if (s.stocuri) setStocuri(s.stocuri as StocItem[]);
@@ -1652,7 +1666,7 @@ function DashboardInner() {
     if (!params.get('buget') && !proiectIdParam) return;
     const supabase = createClient();
     const projectState = {
-      buget, suprafata, concept, localitate, tipAfacere,
+      buget, suprafata, concept, localitate, tipAfacere, descriere,
       meniu: DEFAULT_MENU, cheltuieli: DEFAULT_CHELTUIELI, stocuri: DEFAULT_STOCURI,
       clientiZi: 80, pierderiPct: 6, rampaMuni: 5, preDeschidereMuni: 3,
       angajati: 6, salariuMediu: 4000, scenariu: 'realist',
@@ -1679,7 +1693,7 @@ function DashboardInner() {
     setSaveStatus('saving');
     const supabase = createClient();
     const projectState = {
-      buget, suprafata, concept, localitate, tipAfacere,
+      buget, suprafata, concept, localitate, tipAfacere, descriere,
       meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu,
     };
@@ -1693,7 +1707,7 @@ function DashboardInner() {
     }).eq('id', proiectId);
     setSaveStatus('saved');
     setTimeout(() => setSaveStatus('idle'), 2000);
-  }, [user, proiectId, buget, suprafata, concept, localitate, tipAfacere,
+  }, [user, proiectId, buget, suprafata, concept, localitate, tipAfacere, descriere,
       meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu]);
 
@@ -1708,7 +1722,7 @@ function DashboardInner() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buget, suprafata, meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
+  }, [buget, suprafata, concept, localitate, tipAfacere, descriere, meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu, loaded, proiectId]);
 
   const onConfirmMission = (key: string, val: number) => {
@@ -1855,7 +1869,7 @@ function DashboardInner() {
             </div>
           ) : activeChapter === 2 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={2} title="Descrierea afacerii" fields={cap2Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol2} onCompletionChange={(val) => handleCompletionChange(2, val)} />)}
+              {renderBlurred(<Capitol2Ghidat nr={2} title="Descrierea afacerii" state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} descriere={descriere} onChangeDescriere={setDescriere} onComplete={(val) => handleCompletionChange(2, val)} />)}
             </div>
           ) : activeChapter === 3 ? (
             <div style={ch7.wrap}>
