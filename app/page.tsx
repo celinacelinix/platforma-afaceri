@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -60,6 +60,29 @@ const SIM_CONFIG = {
 export default function LandingPage() {
   const [form, setForm] = useState<FormData>(initialForm);
   const router = useRouter();
+  const [counter, setCounter] = useState(247);
+  useEffect(() => {
+    const startDate = new Date('2026-09-21').getTime();
+    const zileScurse = Math.max(0, Math.floor((Date.now() - startDate) / (1000 * 60 * 60 * 24)));
+    const totalTarget = 247 + (zileScurse * 3);
+    const startVal = totalTarget - 20;
+    
+    let current = startVal;
+    const duration = 1500;
+    const steps = 20;
+    const stepTime = Math.floor(duration / steps);
+    
+    const timer = setInterval(() => {
+      current += 1;
+      setCounter(current);
+      if (current >= totalTarget) {
+        clearInterval(timer);
+        setCounter(totalTarget);
+      }
+    }, stepTime);
+    
+    return () => clearInterval(timer);
+  }, []);
   // Mini-simulator state
   const [simTip, setSimTip] = useState<keyof typeof SIM_CONFIG>('restaurant');
   const [simLocalitate, setSimLocalitate] = useState('București');
@@ -186,14 +209,14 @@ export default function LandingPage() {
           </div>
           <div style={styles.navRight}>
             <button onClick={() => router.push('/login')} className="nav-right-text" style={styles.loginBtn}>Intră în cont</button>
-            <button onClick={scrollToForm} className="btn-accent" style={styles.startBtn}>Începe gratuit</button>
+            <button onClick={scrollToForm} className="btn-accent" style={styles.startBtn}>Începe acum</button>
           </div>
         </div>
       </nav>
 
       {/* SOCIAL PROOF */}
       <div style={styles.socialProof}>
-        🟢 247 antreprenori și-au testat ideea pe platforma noastră
+        🟢 {counter} antreprenori și-au testat ideea pe platforma noastră
       </div>
 
       {/* HERO SECTION */}
