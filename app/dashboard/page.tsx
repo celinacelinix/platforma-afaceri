@@ -209,17 +209,7 @@ function KpiCell({ label, value, accent }: { label: string;
   );
 
 
-  return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ filter: 'blur(4px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.6 }}>
-        {content}
-      </div>
-      <div 
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, cursor: 'pointer', zIndex: 10 }}
-        
-      />
-    </div>
-  );
+  return <>{content}</>;
 }
 
 // ---------------------------------------------------------------------------
