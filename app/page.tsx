@@ -621,13 +621,16 @@ export default function LandingPage() {
               <button onClick={scrollToForm} style={styles.pricingBtnOutline}>Deblochează pachetul complet →</button>
             </div>
 
-            <div style={styles.pricingCard}>
-              <div style={styles.pricingBadgeAlt}>Nișă</div>
-              <h3 style={styles.pricingCardTitle}>CUSTOM</h3>
+                        <div style={styles.pricingCard}>
+              <div style={styles.pricingBadgeAlt}>Alt domeniu</div>
+              <h3 style={styles.pricingCardTitle}>Domeniu personalizat</h3>
+              <p style={{ fontSize: '0.85rem', color: '#4b5563', lineHeight: 1.5, marginBottom: '16px', marginTop: '-8px' }}>
+                Domeniul tău nu e în listă, dar motorul nostru funcționează pentru orice activitate. Tu introduci costurile, prețurile și volumul estimat, iar motorul calculează cash-flow-ul, pragul de rentabilitate și planul de exit.
+              </p>
               <div style={styles.pricingPrice}>89 Lei</div>
               <div style={styles.pricingSubprice}>plată unică</div>
               <ul style={styles.pricingList}>
-                <li>Pentru afaceri atipice sau de nișă</li>
+                <li>Pentru orice domeniu de activitate care nu se regăsește încă în lista noastră configurată.</li>
                 <li>Motor de calcul complet</li>
                 <li>10 capitole narative</li>
                 <li>Completezi manual datele financiare</li>
