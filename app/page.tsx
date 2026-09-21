@@ -199,14 +199,14 @@ export default function LandingPage() {
         <div style={styles.diffInner}>
           <div style={styles.sectionHeader}>
             <h2 style={styles.sectionTitle}>De ce generatoarele obișnuite de planuri de afaceri te pot duce la faliment.</h2>
-            <p style={styles.sectionSubtitle}>Generatoarele existente produc documente optimiste și generice, cu cifre inventate de AI. Noi construim un instrument de decizie.</p>
+            <p style={styles.sectionSubtitle}>Planurile de afaceri generice îți validează ideea indiferent de realitate. Noi îți dăm un verdict — și uneori verdictul e că nu merită.</p>
           </div>
           
           <div className="diff-cards" style={styles.diffCards}>
             <div style={styles.diffCard}>
               <div style={styles.diffIcon}>📊</div>
-              <h3 style={styles.diffCardTitle}>Matematică deterministă, nu doar povești AI</h3>
-              <p style={styles.diffCardText}>La noi, AI-ul doar scrie textul narativ. Tot ce înseamnă calcule, cash-flow și evaluări de risc este procesat de un motor matematic determinist. Aceeași configurație va da mereu același verdict.</p>
+              <h3 style={styles.diffCardTitle}>Cifre verificabile, nu povești generate</h3>
+              <p style={styles.diffCardText}>La noi, textul narativ e generat automat. Tot ce înseamnă calcule, cash-flow și evaluări de risc este procesat de un motor matematic determinist. Aceeași configurație va da mereu același verdict.</p>
             </div>
             <div style={styles.diffCard}>
               <div style={styles.diffIcon}>🛑</div>
