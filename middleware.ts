@@ -31,7 +31,8 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname
   const isProtected = path.startsWith('/proiecte') ||
-                      path.startsWith('/checkout')
+                      path.startsWith('/checkout') ||
+                      path.startsWith('/dashboard')
   const isLogin = path.startsWith('/login')
 
   if (isProtected && !user) {

@@ -22,6 +22,8 @@ const initialForm: FormData = {
   suprafata: '',
 };
 
+import { createBrowserClient } from '@supabase/ssr';
+
 export default function LandingPage() {
   const [form, setForm] = useState<FormData>(initialForm);
   const router = useRouter();
@@ -35,11 +37,36 @@ export default function LandingPage() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
     Object.entries(form).forEach(([k, v]) => { if (v) params.set(k, v); });
-    router.push(`/dashboard?${params.toString()}`);
+    
+    // Save to localStorage for checkout
+    localStorage.setItem('pendingSimParams', params.toString());
+
+    // Check if user is logged in & paid
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    let isPaid = false;
+    if (user) {
+      const { data: isAdminData } = await supabase.from('admini').select('*').eq('user_id', user.id).single();
+      if (isAdminData) {
+        isPaid = true;
+      } else {
+        const { data: projects } = await supabase.from('proiecte').select('*').eq('user_id', user.id).eq('platit', true);
+        if (projects && projects.length > 0) isPaid = true;
+      }
+    }
+
+    if (user && isPaid) {
+      router.push(`/dashboard?${params.toString()}`);
+    } else {
+      router.push(`/checkout?pret=149`);
+    }
   }
 
   const scrollToForm = (e: React.MouseEvent) => {
