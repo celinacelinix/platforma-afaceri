@@ -1536,7 +1536,8 @@ function DashboardInner() {
 
   const [user, setUser] = useState<any>(null);
   useEffect(() => { const supabase = createClient(); supabase.auth.getUser().then(({ data }) => setUser(data.user)); }, []);
-  const isPreview = false; const isPaid = true; const isAdmin = false; const showUnlockModal = false; const setShowUnlockModal = (v: any) => {};
+  // TODO: REACTIVEAZĂ VERIFICAREA DE ACCES ÎNAINTE DE LANSARE
+  const isPreview = false; const isPaid = true; const isAdmin = true; const showUnlockModal = false; const setShowUnlockModal = (v: any) => {};
   
   const [showUnlockedToast, setShowUnlockedToast] = useState(false);
 
