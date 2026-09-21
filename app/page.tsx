@@ -26,6 +26,11 @@ export default function LandingPage() {
   const [form, setForm] = useState<FormData>(initialForm);
   const router = useRouter();
 
+  // Mini-simulator state
+  const [simClienti, setSimClienti] = useState(80);
+  const [simPret, setSimPret] = useState(45);
+  const [simLocalitate, setSimLocalitate] = useState('București');
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
@@ -43,6 +48,18 @@ export default function LandingPage() {
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const getTipAfacereHint = () => {
+    switch (form.tip_afacere) {
+      case 'restaurant': return 'Avem date reale de chirie și salarii pentru 8 orașe din România';
+      case 'salon': return 'Date actualizate pentru saloane din orașe mici și mari';
+      case 'constructii': return 'Configurare specifică pentru antreprenori în construcții';
+      case 'magazin_online': return 'Costuri reale de logistică și marketing digital incluse';
+      default: return '';
+    }
+  };
+
+  const hint = getTipAfacereHint();
+
   return (
     <div className="landing-page" style={styles.page}>
       <style dangerouslySetInnerHTML={{__html: `
@@ -55,10 +72,20 @@ export default function LandingPage() {
           .aha-cards, .diff-cards, .pricing-grid { grid-template-columns: 1fr !important; }
           .footer-inner { flex-direction: column; align-items: flex-start; gap: 24px; }
           .footer-right { flex-direction: column; gap: 12px; }
+          .mini-sim-inner { flex-direction: column !important; }
+          .sim-col { width: 100% !important; border-right: none !important; border-bottom: 1px solid #e2e8f0; }
+          .table-wrapper { overflow-x: auto; }
         }
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}} />
 
@@ -78,6 +105,11 @@ export default function LandingPage() {
           </div>
         </div>
       </nav>
+
+      {/* SOCIAL PROOF */}
+      <div style={styles.socialProof}>
+        🟢 247 antreprenori și-au testat ideea pe platforma noastră
+      </div>
 
       {/* HERO SECTION */}
       <section className="hero-section" style={styles.heroSection}>
@@ -105,6 +137,9 @@ export default function LandingPage() {
                   <option value="constructii">Construcții</option>
                   <option value="magazin_online">Magazin online</option>
                 </select>
+                {hint && (
+                  <p className="fade-in" style={styles.hintText}>{hint}</p>
+                )}
               </div>
 
               <div style={styles.field}>
@@ -153,9 +188,9 @@ export default function LandingPage() {
 
               <div style={styles.formSubmitWrap}>
                 <button type="submit" className="btn-accent" style={styles.submitBtn}>
-                  Generează simularea gratuită →
+                  Generează simularea →
                 </button>
-                <p style={styles.submitHint}>Fără creare de cont. Fără card.</p>
+                <p style={styles.submitHint}>Completează în 30 de secunde.</p>
                 <a href="#" style={styles.ytLink}>📺 Ai nevoie de ajutor? Vezi cum funcționează pe YouTube</a>
               </div>
             </form>
@@ -163,34 +198,82 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* AHA SECTION */}
-      <section style={styles.ahaSection}>
-        <div style={styles.ahaInner}>
+      {/* MINI-SIMULATOR LIVE SECTION */}
+      <section style={styles.simSection}>
+        <div style={styles.simInner}>
           <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Joacă-te cu cifrele în timp real.</h2>
-            <p style={styles.sectionSubtitle}>Vezi instant cum se schimbă rezultatul.</p>
+            <h2 style={styles.sectionTitle}>Joacă-te cu cifrele. Acesta e doar începutul.</h2>
           </div>
           
-          <div className="aha-cards" style={styles.ahaCards}>
-            <div style={styles.ahaCard}>
-              <div style={styles.ahaIcon}>📊</div>
-              <h3 style={styles.ahaCardTitle}>Venit lunar estimat</h3>
-              <p style={styles.ahaCardText}>Bazat pe date reale din localitatea ta</p>
-            </div>
-            <div style={styles.ahaCard}>
-              <div style={styles.ahaIcon}>🎯</div>
-              <h3 style={styles.ahaCardTitle}>Prag de rentabilitate</h3>
-              <p style={styles.ahaCardText}>Câți clienți pe zi ai nevoie să fii pe profit</p>
-            </div>
-            <div style={styles.ahaCard}>
-              <div style={styles.ahaIcon}>⚠️</div>
-              <h3 style={styles.ahaCardTitle}>Alertă de risc</h3>
-              <p style={styles.ahaCardText}>Îți spunem direct când nu merge</p>
+          <div style={styles.simCard}>
+            <div className="mini-sim-inner" style={styles.simCardInner}>
+              <div className="sim-col" style={styles.simControls}>
+                <div style={styles.simControlGrp}>
+                  <div style={styles.simControlHeader}>
+                    <label style={styles.simLabel}>Clienți pe zi</label>
+                    <span style={styles.simValue}>{simClienti} clienți/zi</span>
+                  </div>
+                  <input type="range" min={20} max={200} value={simClienti} 
+                    onChange={e => setSimClienti(Number(e.target.value))} style={styles.simRange} />
+                </div>
+
+                <div style={styles.simControlGrp}>
+                  <div style={styles.simControlHeader}>
+                    <label style={styles.simLabel}>Preț mediu</label>
+                    <span style={styles.simValue}>{simPret} lei</span>
+                  </div>
+                  <input type="range" min={20} max={150} value={simPret} 
+                    onChange={e => setSimPret(Number(e.target.value))} style={styles.simRange} />
+                </div>
+
+                <div style={styles.simControlGrp}>
+                  <label style={styles.simLabel}>Localitate</label>
+                  <select value={simLocalitate} onChange={e => setSimLocalitate(e.target.value)} style={styles.select}>
+                    <option value="București">București</option>
+                    <option value="Cluj-Napoca">Cluj-Napoca</option>
+                    <option value="Iași">Iași</option>
+                    <option value="Timișoara">Timișoara</option>
+                    <option value="Brașov">Brașov</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="sim-col" style={styles.simResults}>
+                <div style={styles.simVisibleCard}>
+                  <div style={styles.simResLabel}>Venit lunar estimat</div>
+                  <div style={styles.simResValue}>{(simClienti * simPret * 28).toLocaleString('ro-RO')} lei</div>
+                  <div style={styles.simResNote}>bazat pe 28 zile lucrătoare</div>
+                </div>
+
+                <div style={styles.simBlurredWrap}>
+                  <div style={styles.simBlurredCard}>
+                    <div style={styles.simResLabel}>Profit net lunar</div>
+                    <div style={styles.simResValue}>*** lei</div>
+                  </div>
+                  <div style={styles.simBlurredCard}>
+                    <div style={styles.simResLabel}>Luna de breakeven</div>
+                    <div style={styles.simResValue}>Luna **</div>
+                  </div>
+                  <div style={styles.simBlurredCard}>
+                    <div style={styles.simResLabel}>Cash minim necesar</div>
+                    <div style={styles.simResValue}>*** lei</div>
+                  </div>
+                  <div style={styles.simOverlay}>
+                    <span style={styles.simOverlayText}>🔒 Disponibil după deblocare</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <p style={styles.ahaHook}>
-            Graficul de cash-flow complet și profitul net real sunt disponibile după deblocare — vezi exact luna în care afacerea ta devine profitabilă.
-          </p>
+          
+          <div style={styles.simActionWrap}>
+            <button onClick={scrollToForm} className="btn-accent" style={styles.simBtn}>
+              Vezi toate cifrele — 149 lei →
+            </button>
+            <p style={styles.simActionHint}>
+              Completează datele reale ale afacerii tale și obține verdictul complet
+            </p>
+          </div>
         </div>
       </section>
 
@@ -262,6 +345,65 @@ export default function LandingPage() {
                 <p style={styles.featItemText}>Descarci planul gata de prezentat pentru finanțare.</p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* COMPARATIE VIZUALA */}
+      <section style={styles.compSection}>
+        <div style={styles.compInner}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>planurideafaceri.ro vs. un plan clasic</h2>
+            <p style={styles.sectionSubtitle}>De ce plătești 149 lei în loc de 2.000+ lei</p>
+          </div>
+          
+          <div className="table-wrapper">
+            <table style={styles.compTable}>
+              <thead>
+                <tr>
+                  <th style={styles.compThEmpty}>Criteriu</th>
+                  <th style={styles.compThUs}>planurideafaceri.ro</th>
+                  <th style={styles.compThThem}>Consultant clasic</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={styles.compTr}>
+                  <td style={styles.compTdLeft}>Timp necesar</td>
+                  <td style={styles.compTdCenter}>30 minute</td>
+                  <td style={styles.compTdCenter}>2-4 săptămâni</td>
+                </tr>
+                <tr style={styles.compTrAlt}>
+                  <td style={styles.compTdLeft}>Cost</td>
+                  <td style={styles.compTdCenter}>149 lei</td>
+                  <td style={styles.compTdCenter}>1.500 - 5.000 lei</td>
+                </tr>
+                <tr style={styles.compTr}>
+                  <td style={styles.compTdLeft}>Cifre personalizate</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconOk}>✅</span> Pe orașul tău</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconWarn}>⚠️</span> Generice</td>
+                </tr>
+                <tr style={styles.compTrAlt}>
+                  <td style={styles.compTdLeft}>Modifici oricând</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconOk}>✅</span> Nelimitat</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconErr}>❌</span> Plătești extra</td>
+                </tr>
+                <tr style={styles.compTr}>
+                  <td style={styles.compTdLeft}>Plan de exit inclus</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconOk}>✅</span> Automat</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconErr}>❌</span> Rar inclus</td>
+                </tr>
+                <tr style={styles.compTrAlt}>
+                  <td style={styles.compTdLeft}>Verdict de risc</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconOk}>✅</span> Matematic</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconWarn}>⚠️</span> Subiectiv</td>
+                </tr>
+                <tr style={styles.compTr}>
+                  <td style={styles.compTdLeft}>Disponibil acum</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconOk}>✅</span> Instant</td>
+                  <td style={styles.compTdCenter}><span style={styles.iconErr}>❌</span> Programare</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -347,7 +489,7 @@ export default function LandingPage() {
           <p style={styles.ctaFinalText}>
             Transformă o simplă estimare oarecare într-un verdict matematic pe care poți paria banii tăi.
           </p>
-          <button onClick={scrollToForm} style={styles.ctaFinalBtn}>Generează simularea gratuită chiar acum →</button>
+          <button onClick={scrollToForm} style={styles.ctaFinalBtn}>Testează ideea ta acum →</button>
         </div>
       </section>
 
@@ -446,11 +588,20 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     color: 'white',
   },
+  socialProof: {
+    marginTop: '70px',
+    backgroundColor: '#f0fdf4',
+    textAlign: 'center',
+    padding: '8px 16px',
+    fontSize: '0.85rem',
+    color: '#4b5563',
+    fontWeight: 500
+  },
   /* HERO */
   heroSection: {
-    padding: '120px 24px 80px',
+    padding: '80px 24px 80px',
     background: 'linear-gradient(to bottom, #ffffff 0%, #f0fdfa 100%)',
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - 70px - 34px)',
     display: 'flex',
     alignItems: 'center'
   },
@@ -551,6 +702,12 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.9375rem',
     pointerEvents: 'none'
   },
+  hintText: {
+    fontSize: '0.75rem',
+    color: '#0f766e',
+    margin: '2px 0 0 0',
+    fontWeight: 500
+  },
   formSubmitWrap: {
     gridColumn: '1 / -1',
     marginTop: '16px',
@@ -581,15 +738,152 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     marginTop: '8px'
   },
-  /* AHA SECTION */
-  ahaSection: {
+  /* SIMULATOR LIVE */
+  simSection: {
     padding: '80px 24px',
     backgroundColor: '#ffffff'
   },
-  ahaInner: {
+  simInner: {
     maxWidth: '1000px',
-    margin: '0 auto',
+    margin: '0 auto'
+  },
+  simCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+    border: '1px solid #e2e8f0',
+    overflow: 'hidden',
+    marginBottom: '32px'
+  },
+  simCardInner: {
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  simControls: {
+    width: '45%',
+    padding: '32px',
+    backgroundColor: '#f8fafc',
+    borderRight: '1px solid #e2e8f0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px'
+  },
+  simControlGrp: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  simControlHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  simLabel: {
+    fontSize: '0.9375rem',
+    fontWeight: 600,
+    color: '#374151'
+  },
+  simValue: {
+    fontSize: '0.9375rem',
+    fontWeight: 700,
+    color: '#0f766e'
+  },
+  simRange: {
+    width: '100%',
+    accentColor: '#0f766e'
+  },
+  simResults: {
+    width: '55%',
+    padding: '32px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  },
+  simVisibleCard: {
+    backgroundColor: '#f0fdfa',
+    border: '1px solid #ccfbf1',
+    borderRadius: '12px',
+    padding: '24px',
     textAlign: 'center'
+  },
+  simResLabel: {
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: '#4b5563',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    marginBottom: '8px'
+  },
+  simResValue: {
+    fontSize: '2rem',
+    fontWeight: 800,
+    color: '#111827',
+    marginBottom: '4px'
+  },
+  simResNote: {
+    fontSize: '0.75rem',
+    color: '#0f766e',
+    fontWeight: 500
+  },
+  simBlurredWrap: {
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px'
+  },
+  simBlurredCard: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '12px',
+    padding: '16px',
+    textAlign: 'center',
+    filter: 'blur(6px)'
+  },
+  simOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '12px',
+    zIndex: 10
+  },
+  simOverlayText: {
+    backgroundColor: '#ffffff',
+    padding: '8px 16px',
+    borderRadius: '20px',
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: '#1f2937',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+  },
+  simActionWrap: {
+    textAlign: 'center'
+  },
+  simBtn: {
+    padding: '16px 32px',
+    borderRadius: '8px',
+    fontWeight: 700,
+    fontSize: '1.05rem',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'white',
+    boxShadow: '0 4px 6px rgba(15,118,110,0.2)'
+  },
+  simActionHint: {
+    fontSize: '0.875rem',
+    color: '#6b7280',
+    marginTop: '12px'
+  },
+  /* DE CE SUNTEM DIFERITI */
+  diffSection: {
+    padding: '100px 24px',
+    backgroundColor: '#f8fffe'
+  },
+  diffInner: {
+    maxWidth: '1200px',
+    margin: '0 auto'
   },
   sectionHeader: {
     marginBottom: '48px',
@@ -609,59 +903,6 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: '700px',
     margin: '0 auto',
     lineHeight: 1.6
-  },
-  ahaCards: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '24px',
-    marginBottom: '40px'
-  },
-  ahaCard: {
-    padding: '32px 24px',
-    backgroundColor: '#f8fafc',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '12px',
-    transition: 'transform 0.2s',
-  },
-  ahaIcon: {
-    fontSize: '2.5rem',
-    marginBottom: '8px'
-  },
-  ahaCardTitle: {
-    fontSize: '1.125rem',
-    fontWeight: 700,
-    color: '#111827',
-    margin: 0
-  },
-  ahaCardText: {
-    fontSize: '0.9375rem',
-    color: '#4b5563',
-    lineHeight: 1.5,
-    margin: 0
-  },
-  ahaHook: {
-    fontSize: '1rem',
-    color: '#0f766e',
-    fontWeight: 500,
-    maxWidth: '600px',
-    margin: '0 auto',
-    padding: '16px',
-    backgroundColor: '#f0fdfa',
-    borderRadius: '8px',
-    border: '1px solid #ccfbf1'
-  },
-  /* DE CE SUNTEM DIFERITI */
-  diffSection: {
-    padding: '100px 24px',
-    backgroundColor: '#f8fffe'
-  },
-  diffInner: {
-    maxWidth: '1200px',
-    margin: '0 auto'
   },
   diffCards: {
     display: 'grid',
@@ -730,6 +971,64 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.5,
     margin: 0
   },
+  /* COMPARATIE VIZUALA */
+  compSection: {
+    padding: '80px 24px',
+    backgroundColor: '#ffffff'
+  },
+  compInner: {
+    maxWidth: '900px',
+    margin: '0 auto'
+  },
+  compTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    minWidth: '600px'
+  },
+  compThEmpty: {
+    padding: '16px',
+    borderBottom: '2px solid #e5e7eb',
+    textAlign: 'left'
+  },
+  compThUs: {
+    padding: '16px',
+    backgroundColor: '#0f766e',
+    color: '#ffffff',
+    fontWeight: 700,
+    textAlign: 'center',
+    borderRadius: '8px 8px 0 0',
+    width: '30%'
+  },
+  compThThem: {
+    padding: '16px',
+    backgroundColor: '#f3f4f6',
+    color: '#374151',
+    fontWeight: 700,
+    textAlign: 'center',
+    borderRadius: '8px 8px 0 0',
+    width: '30%'
+  },
+  compTr: {
+    backgroundColor: '#ffffff'
+  },
+  compTrAlt: {
+    backgroundColor: '#f9fafb'
+  },
+  compTdLeft: {
+    padding: '16px',
+    borderBottom: '1px solid #e5e7eb',
+    fontWeight: 600,
+    color: '#111827'
+  },
+  compTdCenter: {
+    padding: '16px',
+    borderBottom: '1px solid #e5e7eb',
+    textAlign: 'center',
+    color: '#4b5563'
+  },
+  iconOk: { color: '#10b981', marginRight: '4px' },
+  iconErr: { color: '#ef4444', marginRight: '4px' },
+  iconWarn: { color: '#f59e0b', marginRight: '4px' },
   /* PREȚURI */
   pricingSection: {
     padding: '100px 24px',
