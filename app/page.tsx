@@ -650,11 +650,10 @@ export default function LandingPage() {
               <p style={{ fontSize: '0.85rem', color: '#4b5563', lineHeight: 1.5, marginBottom: '16px', marginTop: '-8px' }}>
                 Domeniul tău nu e în listă, dar motorul nostru funcționează pentru orice activitate. Tu introduci costurile, prețurile și volumul estimat, iar motorul calculează cash-flow-ul, pragul de rentabilitate și planul de exit.
               </p>
-              <div style={styles.pricingPrice}>89 Lei</div>
+              <div style={styles.pricingPrice}>99 Lei</div>
               <div style={styles.pricingSubprice}>plată unică</div>
               <ul style={styles.pricingList}>
-                <li>Pentru orice domeniu de activitate care nu se regăsește încă în lista noastră configurată.</li>
-                <li>Motor de calcul complet</li>
+                
                 <li>10 capitole narative</li>
                 <li>Completezi manual datele financiare</li>
                 <li>Fără date de piață preîncărcate</li>
@@ -1394,10 +1393,9 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 10px 25px -5px rgba(15,118,110,0.1)'
   },
   pricingBadge: {
-    position: 'absolute',
-    top: '-12px',
-    left: '50%',
-    transform: 'translateX(-50%)',
+      display: 'inline-block',
+      alignSelf: 'flex-start',
+      marginBottom: '12px',
     backgroundColor: '#0f766e',
     color: '#fff',
     padding: '4px 12px',
@@ -1408,9 +1406,9 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.05em'
   },
   pricingBadgeAlt: {
-    position: 'absolute',
-    top: '16px',
-    right: '16px',
+      display: 'inline-block',
+      alignSelf: 'flex-start',
+      marginBottom: '12px',
     backgroundColor: '#f1f5f9',
     color: '#475569',
     padding: '4px 8px',
