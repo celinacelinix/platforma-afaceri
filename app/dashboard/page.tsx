@@ -1562,20 +1562,7 @@ function DashboardInner() {
     }
   }, [isPaid, params, router, proiectIdParam]);
 
-  const renderBlurred = (content: React.ReactNode) => {
-  
-    return (
-      <div style={{ position: 'relative' }}>
-        <div style={{ filter: 'blur(6px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.6 }}>
-          {content}
-        </div>
-        <div 
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.1)', cursor: 'pointer', zIndex: 10 }}
-          onClick={() => setShowUnlockModal(true)}
-        />
-      </div>
-    );
-  };
+  const renderBlurred = (content: React.ReactNode) => { return <>{content}</>; };
 
   // ── Project save/load ──
   const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
