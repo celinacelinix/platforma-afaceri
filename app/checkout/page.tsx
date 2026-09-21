@@ -55,14 +55,14 @@ function CheckoutInner() {
               <li style={styles.feature}>✓ Salvare și editare nelimitată</li>
             </ul>
 
-            <button
-              disabled
-              style={styles.button}
+                        <button
+              onClick={() => router.push('/')}
+              style={{ ...styles.button, backgroundColor: '#0f766e', cursor: 'pointer', opacity: 1 }}
             >
-              Continuă spre plată (admin - dezactivată)
+              Creează proiect nou →
             </button>
             <p style={styles.hint}>
-              Integrarea cu LemonSqueezy vine în curând
+              Plata securizată · Acces instant după confirmare
             </p>
           </>
         )}

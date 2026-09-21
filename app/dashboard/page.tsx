@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useMemo, Suspense, useEffect, useRef, useCallback } from 'react';
@@ -21,40 +21,40 @@ const { calculeaza } = engine;
 const { evalueazaVerdict } = verdict;
 
 const cap2Fields: FieldDef[] = [
-  { id: 'concept', label: 'Descrie conceptul Ã®n 1-2 propoziÈ›ii', type: 'textarea' },
-  { id: 'clienti', label: 'Ce tip de clienÈ›i vizezi?', type: 'text' },
-  { id: 'program', label: 'Care e programul de funcÈ›ionare?', type: 'text' },
-  { id: 'diferentiator', label: 'Ce te diferenÈ›iazÄƒ de concurenÈ›Äƒ?', type: 'textarea', aiPrompt: 'Idei diferenÈ›iatori' }
+  { id: 'concept', label: 'Descrie conceptul în 1-2 propoziții', type: 'textarea' },
+  { id: 'clienti', label: 'Ce tip de clienți vizezi?', type: 'text' },
+  { id: 'program', label: 'Care e programul de funcționare?', type: 'text' },
+  { id: 'diferentiator', label: 'Ce te diferențiază de concurență?', type: 'textarea', aiPrompt: 'Idei diferențiatori' }
 ];
 
 const cap3Fields: FieldDef[] = [
-  { id: 'trafic', label: 'Descrie zona È™i traficul pietonal', type: 'textarea' },
-  { id: 'clienti', label: 'Cine sunt clienÈ›ii tÄƒi tipici?', type: 'text' },
-  { id: 'teren', label: 'Ce ai observat la concurenÈ›Äƒ pe teren?', type: 'textarea' }
+  { id: 'trafic', label: 'Descrie zona și traficul pietonal', type: 'textarea' },
+  { id: 'clienti', label: 'Cine sunt clienții tăi tipici?', type: 'text' },
+  { id: 'teren', label: 'Ce ai observat la concurență pe teren?', type: 'textarea' }
 ];
 
 const cap4Fields: FieldDef[] = [
-  { id: 'concurenti', label: 'ListeazÄƒ principalii concurenÈ›i', type: 'textarea' },
-  { id: 'puncteSlabe', label: 'Care sunt punctele lor slabe?', type: 'textarea', aiPrompt: 'SugereazÄƒ puncte slabe tipice' },
-  { id: 'diferentiere', label: 'Cum te diferenÈ›iezi faÈ›Äƒ de fiecare?', type: 'textarea' }
+  { id: 'concurenti', label: 'Listează principalii concurenți', type: 'textarea' },
+  { id: 'puncteSlabe', label: 'Care sunt punctele lor slabe?', type: 'textarea', aiPrompt: 'Sugerează puncte slabe tipice' },
+  { id: 'diferentiere', label: 'Cum te diferențiezi față de fiecare?', type: 'textarea' }
 ];
 
 const cap5Fields: FieldDef[] = [
-  { id: 'zi', label: 'Descrie o zi tipicÄƒ de funcÈ›ionare', type: 'textarea' },
+  { id: 'zi', label: 'Descrie o zi tipică de funcționare', type: 'textarea' },
   { id: 'ture', label: 'Cum organizezi turele de personal?', type: 'text' },
   { id: 'furnizori', label: 'Cine sunt furnizori principali?', type: 'text' },
-  { id: 'riscuri', label: 'Care sunt riscurile operaÈ›ionale principale?', type: 'textarea' }
+  { id: 'riscuri', label: 'Care sunt riscurile operaționale principale?', type: 'textarea' }
 ];
 
 const cap8Fields: FieldDef[] = [
   { id: 'canale', label: 'Ce canale de marketing vei folosi?', type: 'checkboxes', options: ['Social media', 'Google Ads', 'Flyere', 'Word of mouth', 'Parteneriate', 'Altele'] },
   { id: 'buget', label: 'Care e bugetul lunar de marketing? (lei)', type: 'text' },
-  { id: 'zile30', label: 'Ce vei face Ã®n primele 30 de zile de la deschidere?', type: 'textarea', aiPrompt: 'Idei pentru primele 30 zile' }
+  { id: 'zile30', label: 'Ce vei face în primele 30 de zile de la deschidere?', type: 'textarea', aiPrompt: 'Idei pentru primele 30 zile' }
 ];
 
 const cap10Fields: FieldDef[] = [
-  { id: 'pasi', label: 'Care sunt primii 5 paÈ™i Ã®nainte de deschidere?', type: 'list', aiPrompt: 'PaÈ™i tipici pentru tipul meu de afacere' },
-  { id: 'data_tinta', label: 'Care e data È›intÄƒ de deschidere?', type: 'text' }
+  { id: 'pasi', label: 'Care sunt primii 5 pași înainte de deschidere?', type: 'list', aiPrompt: 'Pași tipici pentru tipul meu de afacere' },
+  { id: 'data_tinta', label: 'Care e data țintă de deschidere?', type: 'text' }
 ];
 
 const TAXE = { contributii_angajator: { cam_pct: 2.25 } };
@@ -82,13 +82,13 @@ type ChapterStatus = 'green' | 'yellow' | 'gray';
 // ---------------------------------------------------------------------------
 
 const CAT_LABELS: Record<string, string> = {
-  cost_marfa:   'Cost marfÄƒ',
+  cost_marfa:   'Cost marfă',
   personal:     'Personal',
-  spatiu:       'SpaÈ›iu',
-  operational:  'OperaÈ›ional',
+  spatiu:       'Spațiu',
+  operational:  'Operațional',
   marketing:    'Marketing',
   financiar:    'Financiar',
-  neprevazute:  'NeprevÄƒzute',
+  neprevazute:  'Neprevăzute',
 };
 const CAT_ORDER = Object.keys(CAT_LABELS);
 
@@ -98,12 +98,12 @@ let nextStocId        = 10;
 
 const DEFAULT_MENU: MenuItem[] = [
   { id: 1, nume: 'Fel principal', pret: 40, cost: 15, mix_pct: 60 },
-  { id: 2, nume: 'BÄƒuturÄƒ',       pret: 12, cost: 3,  mix_pct: 40 },
+  { id: 2, nume: 'Băutură',       pret: 12, cost: 3,  mix_pct: 40 },
 ];
 
 const DEFAULT_CHELTUIELI: CheltuialaItem[] = [
   { id: 1, nume: 'Chirie',        categorie: 'spatiu',      valoare: 8100, tip: 'fix' },
-  { id: 2, nume: 'UtilitÄƒÈ›i',     categorie: 'spatiu',      valoare: 3000, tip: 'fix' },
+  { id: 2, nume: 'Utilități',     categorie: 'spatiu',      valoare: 3000, tip: 'fix' },
   { id: 4, nume: 'Comision card', categorie: 'operational', valoare: 1.5,  tip: 'pct_venit' },
   { id: 5, nume: 'Contabilitate', categorie: 'financiar',   valoare: 800,  tip: 'fix' },
   { id: 6, nume: 'Marketing',     categorie: 'marketing',   valoare: 1200, tip: 'fix' },
@@ -111,20 +111,20 @@ const DEFAULT_CHELTUIELI: CheltuialaItem[] = [
 
 const DEFAULT_STOCURI: StocItem[] = [
   { id: 1, categorie: 'Perisabil',       pct_din_marfa: 60, zile_stoc: 3,  pierderi_pct: 8, termen_plata_zile: 7  },
-  { id: 2, categorie: 'Uscat / bÄƒuturi', pct_din_marfa: 40, zile_stoc: 21, pierderi_pct: 2, termen_plata_zile: 30 },
+  { id: 2, categorie: 'Uscat / băuturi', pct_din_marfa: 40, zile_stoc: 21, pierderi_pct: 2, termen_plata_zile: 30 },
 ];
 
 const CHAPTERS: { id: number; title: string; defaultStatus: ChapterStatus }[] = [
   { id: 1,  title: 'Rezumat executiv',      defaultStatus: 'gray'   },
   { id: 2,  title: 'Descrierea afacerii',   defaultStatus: 'gray'   },
-  { id: 3,  title: 'PiaÈ›a È™i locaÈ›ia',      defaultStatus: 'gray'   },
-  { id: 4,  title: 'Analiza concurenÈ›ei',   defaultStatus: 'gray'   },
-  { id: 5,  title: 'Plan operaÈ›ional',      defaultStatus: 'gray'   },
-  { id: 6,  title: 'AutorizaÈ›ii',           defaultStatus: 'gray'   },
+  { id: 3,  title: 'Piața și locația',      defaultStatus: 'gray'   },
+  { id: 4,  title: 'Analiza concurenței',   defaultStatus: 'gray'   },
+  { id: 5,  title: 'Plan operațional',      defaultStatus: 'gray'   },
+  { id: 6,  title: 'Autorizații',           defaultStatus: 'gray'   },
   { id: 7,  title: 'Plan financiar',        defaultStatus: 'green'  },
   { id: 8,  title: 'Marketing',             defaultStatus: 'gray'   },
-  { id: 9,  title: 'Risc È™i exit',          defaultStatus: 'green'  },
-  { id: 10, title: 'Plan de acÈ›iune',       defaultStatus: 'gray'   },
+  { id: 9,  title: 'Risc și exit',          defaultStatus: 'green'  },
+  { id: 10, title: 'Plan de acțiune',       defaultStatus: 'gray'   },
 ];
 
 // ---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ function Sidebar({
 }) {
   const legendItems: { status: ChapterStatus; label: string }[] = [
     { status: 'green',  label: 'Date ok' },
-    { status: 'yellow', label: 'EstimÄƒri' },
+    { status: 'yellow', label: 'Estimări' },
     { status: 'gray',   label: 'Gol' },
   ];
 
@@ -341,10 +341,10 @@ function AIGenerator({ chapterId, chapterTitle, state, rez }: { chapterId: numbe
         localStorage.setItem("ai_actions_remaining", newActions.toString());
       } else {
         const err = await response.json();
-        alert(err.error || "A apÄƒrut o eroare la generare.");
+        alert(err.error || "A apărut o eroare la generare.");
       }
     } catch (error) {
-      alert("A apÄƒrut o eroare de reÈ›ea.");
+      alert("A apărut o eroare de rețea.");
     } finally {
       setIsGenerating(false);
     }
@@ -374,17 +374,17 @@ function AIGenerator({ chapterId, chapterTitle, state, rez }: { chapterId: numbe
               {isGenerating ? (
                 <>
                   <span className="spinner" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                  Se genereazÄƒ...
+                  Se generează...
                 </>
               ) : (aiActions !== null && aiActions <= 0) ? (
-                "AcÈ›iuni epuizate"
+                "Acțiuni epuizate"
               ) : (
-                "âœ¨ GenereazÄƒ cu AI"
+                "✨ Generează cu AI"
               )}
             </button>
             {aiActions !== null && (
               <span style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
-                {aiActions} acÈ›iuni AI rÄƒmase
+                {aiActions} acțiuni AI rămase
               </span>
             )}
           </div>
@@ -403,7 +403,7 @@ function AIGenerator({ chapterId, chapterTitle, state, rez }: { chapterId: numbe
           <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end', gap: 16, alignItems: 'center' }}>
             {aiActions !== null && (
               <span style={{ fontSize: '0.8125rem', color: '#6b7280' }}>
-                {aiActions} acÈ›iuni AI rÄƒmase
+                {aiActions} acțiuni AI rămase
               </span>
             )}
             <button 
@@ -416,7 +416,7 @@ function AIGenerator({ chapterId, chapterTitle, state, rez }: { chapterId: numbe
                 display: 'flex', alignItems: 'center', gap: 8
               }}
             >
-              {isGenerating ? "Se genereazÄƒ..." : "RegenereazÄƒ"}
+              {isGenerating ? "Se generează..." : "Regenerează"}
             </button>
           </div>
         </div>
@@ -429,7 +429,7 @@ function AIGenerator({ chapterId, chapterTitle, state, rez }: { chapterId: numbe
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder chapter (chapters 1â€“6, 8â€“10)
+// Placeholder chapter (chapters 1–6, 8–10)
 // ---------------------------------------------------------------------------
 
 function ChapterPlaceholder({
@@ -464,10 +464,10 @@ function MenuTable({ meniu, onChange }: { meniu: MenuItem[]; onChange: (m: MenuI
           <thead>
             <tr>
               <th style={t.thLeft}>Produs</th>
-              <th style={t.thRight}>PreÈ› (lei)</th>
+              <th style={t.thRight}>Preț (lei)</th>
               <th style={t.thRight}>Cost (lei)</th>
               <th style={t.thRight}>Mix %</th>
-              <th style={t.thRight}>MarjÄƒ</th>
+              <th style={t.thRight}>Marjă</th>
               <th style={t.thDel} />
             </tr>
           </thead>
@@ -475,7 +475,7 @@ function MenuTable({ meniu, onChange }: { meniu: MenuItem[]; onChange: (m: MenuI
             {meniu.map(row => {
               const marja = row.pret > 0
                 ? (((Number(row.pret) - Number(row.cost)) / Number(row.pret)) * 100).toFixed(1) + '%'
-                : 'â€”';
+                : '—';
               return (
                 <tr key={row.id} style={t.tr}>
                   <td style={t.tdLeft}>
@@ -492,7 +492,7 @@ function MenuTable({ meniu, onChange }: { meniu: MenuItem[]; onChange: (m: MenuI
                   </td>
                   <td style={{ ...t.tdRight, color: '#6b7280', fontSize: '0.8125rem' }}>{marja}</td>
                   <td style={t.tdDel}>
-                    <button onClick={() => deleteRow(row.id)} style={t.delBtn} title="È˜terge">Ã—</button>
+                    <button onClick={() => deleteRow(row.id)} style={t.delBtn} title="Șterge">×</button>
                   </td>
                 </tr>
               );
@@ -501,9 +501,9 @@ function MenuTable({ meniu, onChange }: { meniu: MenuItem[]; onChange: (m: MenuI
         </table>
       </div>
       {meniu.length > 0 && Math.abs(mixTotal - 100) > 0.5 && (
-        <p style={t.mixWarn}>Mixul Ã®nsumeazÄƒ {mixTotal.toFixed(0)}% â€” se normalizeazÄƒ automat.</p>
+        <p style={t.mixWarn}>Mixul însumează {mixTotal.toFixed(0)}% — se normalizează automat.</p>
       )}
-      <button onClick={addRow} className="btn-accent-ghost" style={t.addBtn}>+ AdaugÄƒ produs</button>
+      <button onClick={addRow} className="btn-accent-ghost" style={t.addBtn}>+ Adaugă produs</button>
     </div>
   );
 }
@@ -528,7 +528,7 @@ function CheltuieliTable({
   }
   function deleteRow(id: number) { onChange(cheltuieli.filter(r => r.id !== id)); }
   function addRow() {
-    onChange([...cheltuieli, { id: nextCheltuialaId++, nume: 'CheltuialÄƒ nouÄƒ', categorie: 'operational', valoare: 0, tip: 'fix' }]);
+    onChange([...cheltuieli, { id: nextCheltuialaId++, nume: 'Cheltuială nouă', categorie: 'operational', valoare: 0, tip: 'fix' }]);
   }
   const groups = CAT_ORDER
     .map(cat => ({ cat, rows: cheltuieli.filter(r => r.categorie === cat) }))
@@ -555,7 +555,7 @@ function CheltuieliTable({
               <th style={cc.thLeft}>Nume</th>
               <th style={cc.thRight}>Valoare</th>
               <th style={{ ...cc.thRight, minWidth: 110 }}>Tip</th>
-              <th style={cc.thRight}>Echivalent / lunÄƒ</th>
+              <th style={cc.thRight}>Echivalent / lună</th>
               <th style={cc.thDel} />
             </tr>
           </thead>
@@ -587,11 +587,11 @@ function CheltuieliTable({
                     </td>
                     <td style={{ ...cc.tdRight, color: '#6b7280', fontSize: '0.8125rem' }}>
                       {row.tip === 'pct_venit'
-                        ? `â‰ˆ ${fmt((venitLunar * (Number(row.valoare) || 0)) / 100)} lei`
+                        ? `≈ ${fmt((venitLunar * (Number(row.valoare) || 0)) / 100)} lei`
                         : `${fmt(Number(row.valoare) || 0)} lei`}
                     </td>
                     <td style={cc.tdDel}>
-                      <button onClick={() => deleteRow(row.id)} style={cc.delBtn} title="È˜terge">Ã—</button>
+                      <button onClick={() => deleteRow(row.id)} style={cc.delBtn} title="Șterge">×</button>
                     </td>
                   </tr>
                 )),
@@ -617,14 +617,14 @@ function CheltuieliTable({
                 {fmt(totalGeneral)} lei
               </td>
               <td style={{ ...cc.tdTotal, textAlign: 'right' as const, color: '#6b7280' }}>
-                {venitLunar > 0 ? ((totalGeneral / venitLunar) * 100).toFixed(1) : 'â€”'}% din venit
+                {venitLunar > 0 ? ((totalGeneral / venitLunar) * 100).toFixed(1) : '—'}% din venit
               </td>
               <td />
             </tr>
           </tbody>
         </table>
       </div>
-      <button onClick={addRow} className="btn-accent-ghost" style={cc.addBtn}>+ AdaugÄƒ cheltuialÄƒ</button>
+      <button onClick={addRow} className="btn-accent-ghost" style={cc.addBtn}>+ Adaugă cheltuială</button>
     </div>
   );
 }
@@ -731,7 +731,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payl
 function CashFlowChart({ serie }: { serie: CashPoint[] }) {
   return (
     <div style={{...sl.chartPanel, position: 'relative' }}>
-      <p style={sl.chartTitle}>Bani Ã®n cont, lunÄƒ cu lunÄƒ</p>
+      <p style={sl.chartTitle}>Bani în cont, lună cu lună</p>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={serie} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barCategoryGap="15%">
           <XAxis dataKey="luna" ticks={[-3, 0, 6, 12, 18, 24]}
@@ -746,7 +746,7 @@ function CashFlowChart({ serie }: { serie: CashPoint[] }) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      <p style={sl.chartLegend}>RoÈ™u = cash negativ.&nbsp; Gri = perioada Ã®nainte de deschidere.</p>
+      <p style={sl.chartLegend}>Roșu = cash negativ.&nbsp; Gri = perioada înainte de deschidere.</p>
     </div>
   );
 }
@@ -756,9 +756,9 @@ function CashFlowChart({ serie }: { serie: CashPoint[] }) {
 // ---------------------------------------------------------------------------
 
 const SENS_VAR_LABELS: Record<string, string> = {
-  pret_mediu:    'PreÈ› mediu vÃ¢nzare',
-  clienti_zi:    'NumÄƒr clienÈ›i/zi',
-  cost_mediu:    'Cost mediu marfÄƒ',
+  pret_mediu:    'Preț mediu vânzare',
+  clienti_zi:    'Număr clienți/zi',
+  cost_mediu:    'Cost mediu marfă',
   cost_personal: 'Cost personal',
   chirie:        'Chirie',
   pierderi_pct:  'Pierderi / perisabilitate',
@@ -787,10 +787,10 @@ function SensitivitateSection({ rows }: { rows: SensRow[] }) {
 
   return (
     <div style={sens.wrap}>
-      <p style={sens.title}>AnalizÄƒ de sensibilitate</p>
+      <p style={sens.title}>Analiză de sensibilitate</p>
       <p style={sens.subtitle}>
-        Impact asupra profitului net la variaÈ›ie de Â±10% pe fiecare factor cheie.
-        Ordonat descrescÄƒtor dupÄƒ amplitudine.
+        Impact asupra profitului net la variație de ±10% pe fiecare factor cheie.
+        Ordonat descrescător după amplitudine.
       </p>
 
       <div style={sens.tableWrap}>
@@ -803,12 +803,12 @@ function SensitivitateSection({ rows }: { rows: SensRow[] }) {
 
           return (
             <div key={row.variabila} style={sens.row}>
-              {/* Nume variabilÄƒ */}
+              {/* Nume variabilă */}
               <div style={sens.nameCell}>
                 <span style={sens.varName}>{label}</span>
               </div>
 
-              {/* BarÄƒ proporÈ›ionalÄƒ */}
+              {/* Bară proporțională */}
               <div style={sens.barCell}>
                 <div style={sens.barRail}>
                   <div style={{
@@ -819,14 +819,14 @@ function SensitivitateSection({ rows }: { rows: SensRow[] }) {
                 </div>
               </div>
 
-              {/* Â±X% impact */}
+              {/* ±X% impact */}
               <div style={sens.impactCell}>
                 <span style={{ ...sens.impactText, color: cfg.color }}>
                   {signPlus}{row.impactPlus.toFixed(1)}% / {signMinus}{row.impactMinus.toFixed(1)}%
                 </span>
               </div>
 
-              {/* EtichetÄƒ */}
+              {/* Etichetă */}
               <div style={sens.labelCell}>
                 <span style={{
                   ...sens.badge,
@@ -842,7 +842,7 @@ function SensitivitateSection({ rows }: { rows: SensRow[] }) {
       </div>
 
       <p style={sens.conclusion}>
-        ðŸ’¡ Afacerea depinde cel mai mult de <strong>{primaVar}</strong>.
+        💡 Afacerea depinde cel mai mult de <strong>{primaVar}</strong>.
       </p>
     </div>
   );
@@ -866,7 +866,7 @@ function StocuriTable({
   function deleteRow(id: number) { onChange(stocuri.filter(r => r.id !== id)); }
   function addRow() {
     onChange([...stocuri, {
-      id: nextStocId++, categorie: 'Categorie nouÄƒ',
+      id: nextStocId++, categorie: 'Categorie nouă',
       pct_din_marfa: 0, zile_stoc: 7, pierderi_pct: 0, termen_plata_zile: 14,
     }]);
   }
@@ -882,17 +882,17 @@ function StocuriTable({
   return (
     <div>
       <p style={sk.explainer}>
-        Zile stoc = cÃ¢t capital blochezi Ã®n marfÄƒ. Pierderi % = cÃ¢t din marfÄƒ arunci. Sunt lucruri diferite.
+        Zile stoc = cât capital blochezi în marfă. Pierderi % = cât din marfă arunci. Sunt lucruri diferite.
       </p>
       <div style={sk.tableWrap}>
         <table style={sk.table}>
           <thead>
             <tr>
               <th style={sk.thLeft}>Categorie</th>
-              <th style={sk.thRight}>% din marfÄƒ</th>
+              <th style={sk.thRight}>% din marfă</th>
               <th style={sk.thRight}>Zile stoc</th>
               <th style={sk.thRight}>Pierderi %</th>
-              <th style={sk.thRight}>Termen platÄƒ (zile)</th>
+              <th style={sk.thRight}>Termen plată (zile)</th>
               <th style={sk.thRight}>Capital blocat</th>
               <th style={sk.thDel} />
             </tr>
@@ -923,14 +923,14 @@ function StocuriTable({
                   {fmt(capitalBlocatRand(row))} lei
                 </td>
                 <td style={sk.tdDel}>
-                  <button onClick={() => deleteRow(row.id)} style={sk.delBtn} title="È˜terge">Ã—</button>
+                  <button onClick={() => deleteRow(row.id)} style={sk.delBtn} title="Șterge">×</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <button onClick={addRow} className="btn-accent-ghost" style={sk.addBtn}>+ AdaugÄƒ categorie</button>
+      <button onClick={addRow} className="btn-accent-ghost" style={sk.addBtn}>+ Adaugă categorie</button>
       <div style={sk.summary}>
         <div style={sk.summaryItem}>
           <span style={sk.summaryLabel}>Pierderi medii ponderate</span>
@@ -950,7 +950,7 @@ function StocuriTable({
 }
 
 // ---------------------------------------------------------------------------
-// Chapter7 â€“ tab types
+// Chapter7 – tab types
 // ---------------------------------------------------------------------------
 
 type Ch7Tab = 'meniu' | 'cheltuieli' | 'stocuri' | 'cashflow';
@@ -977,7 +977,7 @@ function CashFlowIndicators({
   serieCash: CashPoint[];
 }) {
   // Breakeven = venit la care profit = 0  (already expressed as clients/zi = pragRupere)
-  // Recuperare investiÈ›ie = prima lunÄƒ cu cash > 0 dupÄƒ faza de rampÄƒ
+  // Recuperare investiție = prima lună cu cash > 0 după faza de rampă
   const recuperareLuna = serieCash.find(p => !p.preDeschidere && p.cash > 0)?.luna ?? null;
 
   return (
@@ -987,7 +987,7 @@ function CashFlowIndicators({
         <p style={cf.indValue}>
           {pragRupere !== null ? <>{pragRupere} <span style={cf.indUnit}>cl/zi</span></> : <span style={{ color: '#E24B4A' }}>imposibil</span>}
         </p>
-        <p style={cf.indSub}>Minim clienÈ›i pe zi pentru a nu pierde bani</p>
+        <p style={cf.indSub}>Minim clienți pe zi pentru a nu pierde bani</p>
       </div>
       <div style={cf.indCard}>
         <p style={cf.indLabel}>Cash minim</p>
@@ -999,16 +999,16 @@ function CashFlowIndicators({
       <div style={cf.indCard}>
         <p style={cf.indLabel}>Breakeven lunar</p>
         <p style={cf.indValue}>
-          {venitLunar > 0 ? <>{fmt(totalCheltuieli)} <span style={cf.indUnit}>lei/lunÄƒ</span></> : 'â€”'}
+          {venitLunar > 0 ? <>{fmt(totalCheltuieli)} <span style={cf.indUnit}>lei/lună</span></> : '—'}
         </p>
-        <p style={cf.indSub}>Cifra de afaceri necesarÄƒ pentru profit zero</p>
+        <p style={cf.indSub}>Cifra de afaceri necesară pentru profit zero</p>
       </div>
       <div style={cf.indCard}>
         <p style={cf.indLabel}>Recuperare</p>
         <p style={{ ...cf.indValue, color: recuperareLuna !== null && recuperareLuna <= 12 ? ACCENT : '#111' }}>
-          {recuperareLuna !== null ? <>L{recuperareLuna} <span style={cf.indUnit}>dupÄƒ deschidere</span></> : 'â€”'}
+          {recuperareLuna !== null ? <>L{recuperareLuna} <span style={cf.indUnit}>după deschidere</span></> : '—'}
         </p>
-        <p style={cf.indSub}>Prima lunÄƒ cu sold pozitiv Ã®n cont</p>
+        <p style={cf.indSub}>Prima lună cu sold pozitiv în cont</p>
       </div>
     </div>
   );
@@ -1064,7 +1064,7 @@ function Chapter7({
         <ConfidenceBar missionStatus={missionStatus} sensibilitate={(rez.sensibilitate as SensRow[]) || []} />
       </div>
 
-      {/* â”€â”€ Verdict strip (always visible) â”€â”€ */}
+      {/* ── Verdict strip (always visible) ── */}
       {alerte.length > 0 && (
         <div style={ch7.verdictStrip}>
           <span style={ch7.verdictTitle}>Verdict:</span>
@@ -1076,7 +1076,7 @@ function Chapter7({
         </div>
       )}
 
-      {/* â”€â”€ Tab bar â”€â”€ */}
+      {/* ── Tab bar ── */}
       <div style={ch7.tabBar} className="ch7-tab-bar">
         {CH7_TABS.map(tab => (
           <button
@@ -1092,16 +1092,16 @@ function Chapter7({
         ))}
       </div>
 
-      {/* â”€â”€ Tab: Meniu â”€â”€ */}
+      {/* ── Tab: Meniu ── */}
       {activeTab === 'meniu' && (
         <section style={ch7.panelFull}>
-          <h2 style={ch7.panelTitle}>Meniu È™i structura venitului</h2>
+          <h2 style={ch7.panelTitle}>Meniu și structura venitului</h2>
           {renderBlurred(
             <>
               <MenuTable meniu={meniu} onChange={setMeniu} />
               {meniu.length > 0 && (
                 <div style={ch7.menuStats}>
-                  <span>PreÈ› mediu ponderat: <strong>{pretMediu.toFixed(2)} lei</strong></span>
+                  <span>Preț mediu ponderat: <strong>{pretMediu.toFixed(2)} lei</strong></span>
                   <span>Food cost mediu: <strong style={{ color: foodCostPct > 40 ? '#E24B4A' : '#111' }}>{foodCostPct.toFixed(1)}%</strong></span>
                 </div>
               )}
@@ -1114,17 +1114,17 @@ function Chapter7({
           {/* Parametri + Rezultate */}
           <div style={{ ...ch7.grid, marginTop: 24 }}>
             <section style={ch7.panel}>
-              <h2 style={ch7.panelTitle}>Parametri operaÈ›ionali</h2>
-              <Slider id="clienti-zi" label="ClienÈ›i pe zi" min={10} max={250} step={5} value={clientiZi} unit="clienÈ›i" onChange={setClientiZi} />
+              <h2 style={ch7.panelTitle}>Parametri operaționali</h2>
+              <Slider id="clienti-zi" label="Clienți pe zi" min={10} max={250} step={5} value={clientiZi} unit="clienți" onChange={setClientiZi} />
               <MissionCard fieldKey="clienti_zi" status={missionStatus.clienti_zi as any} value={clientiZi} onConfirm={(v) => onConfirmMission('clienti_zi', v)} />
               <div style={{ marginTop: 24 }} />
               
               {renderBlurred(
                 <>
                   <Slider id="pierderi" label="Pierderi / perisabilitate" min={0} max={20} step={0.5} value={pierderiPct} unit="%" onChange={setPierderiPct} />
-                  <Slider id="rampa" label="RampÄƒ la capacitate" min={1} max={12} step={1} value={rampaMuni} unit="luni" onChange={setRampaMuni} />
-                  <Slider id="pre-deschidere" label="PerioadÄƒ pre-deschidere" min={0} max={6} step={1} value={preDeschidereMuni} unit="luni" onChange={setPreDeschidereMuni} />
-                  <Slider id="angajati" label="NumÄƒr angajaÈ›i" min={1} max={20} step={1} value={angajati} unit="pers." onChange={setAngajati} />
+                  <Slider id="rampa" label="Rampă la capacitate" min={1} max={12} step={1} value={rampaMuni} unit="luni" onChange={setRampaMuni} />
+                  <Slider id="pre-deschidere" label="Perioadă pre-deschidere" min={0} max={6} step={1} value={preDeschidereMuni} unit="luni" onChange={setPreDeschidereMuni} />
+                  <Slider id="angajati" label="Număr angajați" min={1} max={20} step={1} value={angajati} unit="pers." onChange={setAngajati} />
                   
                   <Slider id="salariu" label="Salariu mediu brut" min={2000} max={15000} step={500} value={salariuMediu} unit="lei" onChange={setSalariuMediu} />
                   <MissionCard fieldKey="salarii" status={missionStatus.salarii as any} value={salariuMediu} onConfirm={(v) => onConfirmMission('salarii', v)} />
@@ -1132,7 +1132,7 @@ function Chapter7({
               )}
               <div style={{ marginTop: 24 }} />
 
-              <p style={ch7.hint}>ModificÄƒrile se reflectÄƒ instant Ã®n rezultate.</p>
+              <p style={ch7.hint}>Modificările se reflectă instant în rezultate.</p>
             </section>
 
             <section style={ch7.panel}>
@@ -1142,7 +1142,7 @@ function Chapter7({
                 {renderBlurred(
                   <>
                     <Card label="Profit net"           value={`${fmt(profitNet)} lei`} accent={profitNet > 0} />
-                    <Card label="Prag de rupere"       value={pragRupere !== null ? `${pragRupere} clienÈ›i/zi` : 'imposibil'} />
+                    <Card label="Prag de rupere"       value={pragRupere !== null ? `${pragRupere} clienți/zi` : 'imposibil'} />
                     <Card label="Cash minim proiectat" value={`${fmt(rez.cashMinim as number)} lei`} />
                   </>
                 )}
@@ -1150,7 +1150,7 @@ function Chapter7({
 
               {renderBlurred(
                 <div style={ch7.marjaRow}>
-                  <span style={ch7.marjaLabel}>MarjÄƒ netÄƒ</span>
+                  <span style={ch7.marjaLabel}>Marjă netă</span>
                   <span style={{
                     ...ch7.marjaBadge,
                     backgroundColor: marjaNetaPct >= 3 && marjaNetaPct <= 8 ? '#f0fdf4' : marjaNetaPct > 8 ? '#fffbeb' : '#fef2f2',
@@ -1165,7 +1165,7 @@ function Chapter7({
         </section>
       )}
 
-      {/* â”€â”€ Tab: Cheltuieli â”€â”€ */}
+      {/* ── Tab: Cheltuieli ── */}
       {activeTab === 'cheltuieli' && (
         <section style={ch7.panelFull}>
           <h2 style={ch7.panelTitle}>Cheltuieli lunare</h2>
@@ -1185,7 +1185,7 @@ function Chapter7({
         </section>
       )}
 
-      {/* â”€â”€ Tab: Stocuri â”€â”€ */}
+      {/* ── Tab: Stocuri ── */}
       {activeTab === 'stocuri' && (
         <section style={ch7.panelFull}>
           <h2 style={ch7.panelTitle}>Structura stocurilor</h2>
@@ -1201,7 +1201,7 @@ function Chapter7({
         </section>
       )}
 
-      {/* â”€â”€ Tab: Cash-flow â”€â”€ */}
+      {/* ── Tab: Cash-flow ── */}
       {activeTab === 'cashflow' && (
         <div>
           {renderBlurred(
@@ -1240,11 +1240,11 @@ function Chapter9({
   const punctCash = serieCash.find(p => p.luna === luniExit && !p.preDeschidere) || serieCash[serieCash.length - 1];
   const cashRamas = punctCash ? punctCash.cash : 0;
   
-  // Capital consumat (pÃ¢nÄƒ atunci) = Buget iniÈ›ial - Cash rÄƒmas
+  // Capital consumat (până atunci) = Buget inițial - Cash rămas
   const investitPanaAtunci = buget - cashRamas;
   
-  // Active (din buget) - aproximativ 70% este investiÈ›ie Ã®n active (echipamente/amenajare) cf. buildState
-  const investitii = [{ nume: 'Echipamente È™i amenajare', valoare: buget * 0.7 }];
+  // Active (din buget) - aproximativ 70% este investiție în active (echipamente/amenajare) cf. buildState
+  const investitii = [{ nume: 'Echipamente și amenajare', valoare: buget * 0.7 }];
 
   const sumaRecuperabila = investitii.reduce((acc, inv) => {
     const pct = recupPct[inv.nume] ?? 40;
@@ -1256,7 +1256,7 @@ function Chapter9({
   return (
     <div style={ch7.wrap}>
       <section style={ch7.panelFull}>
-        <h2 style={ch7.panelTitle}>Risc È™i exit (DacÄƒ te opreÈ™ti)</h2>
+        <h2 style={ch7.panelTitle}>Risc și exit (Dacă te oprești)</h2>
 
         {/* Switcher luni */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
@@ -1283,14 +1283,14 @@ function Chapter9({
 
         {/* Grid de rezultate */}
         <div style={ch7.cards}>
-          <Card label="Capital consumat (pÃ¢nÄƒ atunci)" value={`${fmt(investitPanaAtunci)} lei`} />
+          <Card label="Capital consumat (până atunci)" value={`${fmt(investitPanaAtunci)} lei`} />
           <Card label="Recuperabil din active" value={`${fmt(sumaRecuperabila)} lei`} accent />
-          <Card label="Pierdere netÄƒ estimatÄƒ" value={`${fmt(pierdereNeta)} lei`} />
+          <Card label="Pierdere netă estimată" value={`${fmt(pierdereNeta)} lei`} />
         </div>
 
         {/* Tabel Active */}
         <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111', marginTop: 32, marginBottom: 12 }}>
-          Active È™i recuperare
+          Active și recuperare
         </h3>
         <MissionCard 
           fieldKey="cost_echipament" 
@@ -1303,7 +1303,7 @@ function Chapter9({
           <table style={t.table}>
             <thead>
               <tr>
-                <th style={t.thLeft}>Element investiÈ›ie</th>
+                <th style={t.thLeft}>Element investiție</th>
                 <th style={t.thRight}>Valoare (lei)</th>
                 <th style={t.thRight}>% Recuperare</th>
                 <th style={t.thRight}>Recuperabil (lei)</th>
@@ -1335,22 +1335,22 @@ function Chapter9({
           </table>
         </div>
         <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: 8, fontStyle: 'italic' }}>
-          * Procentele de recuperare sunt estimÄƒri. VerificÄƒ pe piaÈ›a second-hand.
+          * Procentele de recuperare sunt estimări. Verifică pe piața second-hand.
         </p>
 
-        {/* SecÈ›iune "DacÄƒ te opreÈ™ti" */}
+        {/* Secțiune "Dacă te oprești" */}
         <div style={{ marginTop: 32, padding: 20, backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12 }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111', marginBottom: 16 }}>DacÄƒ te opreÈ™ti (PaÈ™i exit)</h3>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111', marginBottom: 16 }}>Dacă te oprești (Pași exit)</h3>
           <ul style={{ fontSize: '0.875rem', color: '#374151', paddingLeft: 20, lineHeight: 1.6, margin: 0 }}>
-            <li><strong>Preaviz contract chirie:</strong> De obicei 1-3 luni (verificÄƒ clauzele contractuale). Costul cu chiria va continua Ã®n aceastÄƒ perioadÄƒ.</li>
-            <li><strong>Cost lichidare personal:</strong> Estimat la 1-2 salarii compensatorii / angajat (dacÄƒ este cazul).</li>
-            <li><strong>PaÈ™i legali:</strong> Suspendare firmÄƒ &rarr; Radiere &rarr; Protejare bunuri personale.</li>
+            <li><strong>Preaviz contract chirie:</strong> De obicei 1-3 luni (verifică clauzele contractuale). Costul cu chiria va continua în această perioadă.</li>
+            <li><strong>Cost lichidare personal:</strong> Estimat la 1-2 salarii compensatorii / angajat (dacă este cazul).</li>
+            <li><strong>Pași legali:</strong> Suspendare firmă &rarr; Radiere &rarr; Protejare bunuri personale.</li>
           </ul>
         </div>
       </section>
       
       <div style={{ marginTop: 24 }}>
-        <AIGenerator chapterId={9} chapterTitle="Risc È™i exit" state={state} rez={rez} />
+        <AIGenerator chapterId={9} chapterTitle="Risc și exit" state={state} rez={rez} />
       </div>
     </div>
   );
@@ -1404,11 +1404,11 @@ function ScenariuSwitcher({
 // ---------------------------------------------------------------------------
 
 const MISSIONS_DEF = {
-  pret_mediu: { title: 'PreÈ› mediu', instruction: 'VerificÄƒ preÈ›urile concurenÈ›ei din zonÄƒ pentru produse similare.', unit: 'lei' },
-  clienti_zi: { title: 'ClienÈ›i pe zi', instruction: 'NumÄƒrÄƒ trecÄƒtorii sau clienÈ›ii competiÈ›iei Ã®ntr-o zi de vÃ¢rf È™i una slabÄƒ.', unit: 'clienÈ›i' },
-  chirie: { title: 'Chirie lunarÄƒ', instruction: 'ContacteazÄƒ 3 agenÈ›ii imobiliare pentru spaÈ›ii similare Ã®n zonÄƒ.', unit: 'lei' },
-  salarii: { title: 'Salariu mediu brut', instruction: 'VerificÄƒ ofertele de angajare actuale pe platformele de joburi.', unit: 'lei' },
-  cost_echipament: { title: 'InvestiÈ›ie / Echipament', instruction: 'Cere 2 oferte reale de la furnizori de echipamente.', unit: 'lei' },
+  pret_mediu: { title: 'Preț mediu', instruction: 'Verifică prețurile concurenței din zonă pentru produse similare.', unit: 'lei' },
+  clienti_zi: { title: 'Clienți pe zi', instruction: 'Numără trecătorii sau clienții competiției într-o zi de vârf și una slabă.', unit: 'clienți' },
+  chirie: { title: 'Chirie lunară', instruction: 'Contactează 3 agenții imobiliare pentru spații similare în zonă.', unit: 'lei' },
+  salarii: { title: 'Salariu mediu brut', instruction: 'Verifică ofertele de angajare actuale pe platformele de joburi.', unit: 'lei' },
+  cost_echipament: { title: 'Investiție / Echipament', instruction: 'Cere 2 oferte reale de la furnizori de echipamente.', unit: 'lei' },
 };
 
 function ConfidenceBar({ missionStatus, sensibilitate }: { missionStatus: Record<string, string>, sensibilitate: SensRow[] }) {
@@ -1416,11 +1416,11 @@ function ConfidenceBar({ missionStatus, sensibilitate }: { missionStatus: Record
   const verifiedCount = keys.filter(k => missionStatus[k] === 'verificat').length;
   const pct = (verifiedCount / keys.length) * 100;
   
-  let label = "Estimare orientativÄƒ";
+  let label = "Estimare orientativă";
   let color = "#ef4444";
-  if (pct >= 80) { label = "FundamentatÄƒ"; color = "#22c55e"; }
-  else if (pct >= 50) { label = "ParÈ›ial validatÄƒ"; color = "#eab308"; }
-  else if (pct >= 25) { label = "Estimare Ã®mbunÄƒtÄƒÈ›itÄƒ"; color = "#f97316"; }
+  if (pct >= 80) { label = "Fundamentată"; color = "#22c55e"; }
+  else if (pct >= 50) { label = "Parțial validată"; color = "#eab308"; }
+  else if (pct >= 25) { label = "Estimare îmbunătățită"; color = "#f97316"; }
 
   const sortedKeys = [...keys].sort((a, b) => {
     const impactA = sensibilitate.find(s => s.variabila === a)?.impactMax || 0;
@@ -1432,12 +1432,12 @@ function ConfidenceBar({ missionStatus, sensibilitate }: { missionStatus: Record
     <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '12px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111' }}>ÃŽncredere date: {pct.toFixed(0)}%</span>
+          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#111' }}>Încredere date: {pct.toFixed(0)}%</span>
           <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: 999, backgroundColor: color + '20', color: color }}>
             {label}
           </span>
         </div>
-        <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>VerificÄƒ misiunile (ordinea impactului)</span>
+        <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Verifică misiunile (ordinea impactului)</span>
       </div>
       <div style={{ height: 6, backgroundColor: '#f3f4f6', borderRadius: 999, overflow: 'hidden', maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ height: '100%', backgroundColor: color, width: `${pct}%`, transition: 'all 0.5s ease' }} />
@@ -1452,7 +1452,7 @@ function ConfidenceBar({ missionStatus, sensibilitate }: { missionStatus: Record
               opacity: isVerified ? 0.7 : 1
             }}>
               <span style={{ fontSize: '0.75rem', color: isVerified ? '#166534' : '#374151', fontWeight: 500 }}>
-                {isVerified ? 'âœ“ ' : 'â—‹ '}{MISSIONS_DEF[k as keyof typeof MISSIONS_DEF].title}
+                {isVerified ? '✓ ' : '○ '}{MISSIONS_DEF[k as keyof typeof MISSIONS_DEF].title}
               </span>
             </div>
           );
@@ -1475,8 +1475,8 @@ function MissionCard({
   if (status === 'verificat') {
     return (
       <div style={{ marginTop: 8, padding: '8px 12px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ color: '#166534', fontSize: '1.25rem', lineHeight: 1 }}>âœ“</span>
-        <span style={{ fontSize: '0.8125rem', color: '#166534', fontWeight: 500 }}>SursÄƒ: Verificat pe teren ({localVal} {def.unit})</span>
+        <span style={{ color: '#166534', fontSize: '1.25rem', lineHeight: 1 }}>✓</span>
+        <span style={{ fontSize: '0.8125rem', color: '#166534', fontWeight: 500 }}>Sursă: Verificat pe teren ({localVal} {def.unit})</span>
       </div>
     );
   }
@@ -1484,7 +1484,7 @@ function MissionCard({
   return (
     <div style={{ marginTop: 8, padding: 16, backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-        <span style={{ fontSize: '1rem' }}>ðŸŽ¯</span>
+        <span style={{ fontSize: '1rem' }}>🎯</span>
         <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#92400e' }}>Misiune: {def.title}</span>
       </div>
       <p style={{ fontSize: '0.75rem', color: '#92400e', marginBottom: 12, lineHeight: 1.4 }}>{def.instruction}</p>
@@ -1500,13 +1500,13 @@ function MissionCard({
           onClick={() => onConfirm(localVal)}
           style={{ marginLeft: 'auto', backgroundColor: '#92400e', color: 'white', border: 'none', padding: '4px 12px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
         >
-          ConfirmÄƒ
+          Confirmă
         </button>
         <button 
           onClick={() => onConfirm(value)}
           style={{ backgroundColor: 'transparent', color: '#92400e', border: '1px solid #92400e', padding: '4px 12px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
         >
-          LasÄƒ estimarea
+          Lasă estimarea
         </button>
       </div>
     </div>
@@ -1552,7 +1552,7 @@ function DashboardInner() {
 
   useEffect(() => {
     // If the user just arrived and is logged in + paid, maybe show a toast if we want to.
-    // The prompt says "Un mesaj verde discret timp de 3 secunde: âœ“ Simulare deblocatÄƒ â€” bine ai venit!"
+    // The prompt says "Un mesaj verde discret timp de 3 secunde: ✓ Simulare deblocată — bine ai venit!"
     // But how do we know they JUST unlocked? We don't, unless we use a query param `?unlocked=true`.
     if (isPaid && params.get('unlocked') === 'true') {
       setShowUnlockedToast(true);
@@ -1576,7 +1576,7 @@ function DashboardInner() {
     );
   };
 
-  // â”€â”€ Project save/load â”€â”€
+  // ── Project save/load ──
   const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [loaded, setLoaded] = useState(false);
@@ -1636,7 +1636,7 @@ function DashboardInner() {
   const [salariuMediu, setSalariuMediu]             = useState(4000);
   const [scenariu, setScenariu]                     = useState<'pesimist' | 'realist' | 'optimist'>('realist');
 
-  // â”€â”€ Load project from Supabase â”€â”€
+  // ── Load project from Supabase ──
   useEffect(() => {
     if (!proiectIdParam) {
       setLoaded(true);
@@ -1667,7 +1667,7 @@ function DashboardInner() {
    
   }, [proiectIdParam]);
 
-  // â”€â”€ Auto-create project when arriving from form (no proiect_id) â”€â”€
+  // ── Auto-create project when arriving from form (no proiect_id) ──
   useEffect(() => {
     if (!loaded || !user || proiectId) return;
     // Only auto-create if we came from the form (has form params in URL)
@@ -1679,7 +1679,7 @@ function DashboardInner() {
       clientiZi: 80, pierderiPct: 6, rampaMuni: 5, preDeschidereMuni: 3,
       angajati: 6, salariuMediu: 4000, scenariu: 'realist',
     };
-    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' Â· ') || 'Proiect nou';
+    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' · ') || 'Proiect nou';
     supabase.from('proiecte').insert({
       user_id: user.id,
       state: projectState,
@@ -1695,7 +1695,7 @@ function DashboardInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, user]);
 
-  // â”€â”€ Save function (called by debounce) â”€â”€
+  // ── Save function (called by debounce) ──
   const doSave = useCallback(async () => {
     if (!user || !proiectId) return;
     setSaveStatus('saving');
@@ -1705,7 +1705,7 @@ function DashboardInner() {
       meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu,
     };
-    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' Â· ') || 'Proiect nou';
+    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' · ') || 'Proiect nou';
     await supabase.from('proiecte').update({
       state: projectState,
       nume: numeProiect,
@@ -1719,7 +1719,7 @@ function DashboardInner() {
       meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu]);
 
-  // â”€â”€ Auto-save debounce (3s after any data change) â”€â”€
+  // ── Auto-save debounce (3s after any data change) ──
   useEffect(() => {
     if (!loaded || !user || !proiectId) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -1764,13 +1764,13 @@ function DashboardInner() {
   );
 
   const subtitle = [tipAfacere.charAt(0).toUpperCase() + tipAfacere.slice(1), concept, localitate]
-    .filter(Boolean).join(' Â· ');
+    .filter(Boolean).join(' · ');
 
   const activeChapterObj = CHAPTERS.find(ch => ch.id === activeChapter)!;
 
   return (
     <div style={lay.root} className="dashboard-root">
-      {/* â”€â”€ KPI bar (fixed top) â”€â”€ */}
+      {/* ── KPI bar (fixed top) ── */}
       <KpiBar
         venitLunar={rez.venitLunar as number}
         profitNet={rez.profitNet as number}
@@ -1780,7 +1780,7 @@ function DashboardInner() {
         
       />
 
-      {/* â”€â”€ Mobile chapter strip (below KPI bar, hidden on desktop) â”€â”€ */}
+      {/* ── Mobile chapter strip (below KPI bar, hidden on desktop) ── */}
       <div style={lay.mobileStripWrapper} className="mobile-strip-wrapper">
         <MobileChapterStrip
           activeChapter={activeChapter}
@@ -1789,7 +1789,7 @@ function DashboardInner() {
         />
       </div>
 
-      {/* â”€â”€ Page header â”€â”€ */}
+      {/* ── Page header ── */}
       <header style={lay.pageHeader} className="page-header">
         <div style={lay.pageHeaderInner} className="page-header-inner">
           <div>
@@ -1804,7 +1804,7 @@ function DashboardInner() {
                 color: saveStatus === 'saved' ? '#16a34a' : '#9ca3af',
                 fontWeight: 500,
               }}>
-                {saveStatus === 'saving' ? 'â³ Se salveazÄƒ...' : 'âœ“ Salvat'}
+                {saveStatus === 'saving' ? 'â³ Se salvează...' : '✓ Salvat'}
               </span>
             )}
             {user && (
@@ -1814,12 +1814,12 @@ function DashboardInner() {
             )}
             {user && (
               <button onClick={() => router.push('/proiecte')} style={lay.backBtn}>
-                ðŸ“‹ Proiectele mele
+                📋 Proiectele mele
               </button>
             )}
             {isAdmin && (
               <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#0f766e', backgroundColor: '#ccfbf1', padding: '4px 10px', borderRadius: 999 }}>
-                ðŸ‘‘ Admin
+                👑 Admin
               </span>
             )}
             <button 
@@ -1831,13 +1831,13 @@ function DashboardInner() {
               style={{ ...lay.backBtn, color: '#ef4444' }}
               className="logout-btn-desktop"
             >
-              IeÈ™i din cont
+              Ieși din cont
             </button>
           </div>
         </div>
       </header>
 
-      {/* â”€â”€ Body: sidebar + content â”€â”€ */}
+      {/* ── Body: sidebar + content ── */}
       <div style={lay.body}>
         {/* Sidebar (desktop only) */}
         <div style={lay.sidebarWrapper} className="sidebar-wrapper">
@@ -1873,7 +1873,7 @@ function DashboardInner() {
             renderBlurred(<Chapter9 rez={rez as Record<string, unknown>} buget={buget} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} missionStatus={missionStatus} onConfirmMission={onConfirmMission} />)
           ) : activeChapter === 1 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={1} title="Rezumat executiv" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={(f, s, r) => asambleazaCapitol1({ cap2: {} }, s, r)} isAutoGenerated isBlocked={!allNarrativeCompleted} blockedMessage="Acest capitol se genereazÄƒ automat pe baza celorlalte capitole. AsigurÄƒ-te cÄƒ ai completat toate celelalte capitole Ã®nainte de a-l asambla." onCompletionChange={(val) => handleCompletionChange(1, val)} />)}
+              {renderBlurred(<Capitol nr={1} title="Rezumat executiv" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={(f, s, r) => asambleazaCapitol1({ cap2: {} }, s, r)} isAutoGenerated isBlocked={!allNarrativeCompleted} blockedMessage="Acest capitol se generează automat pe baza celorlalte capitole. Asigură-te că ai completat toate celelalte capitole înainte de a-l asambla." onCompletionChange={(val) => handleCompletionChange(1, val)} />)}
             </div>
           ) : activeChapter === 2 ? (
             <div style={ch7.wrap}>
@@ -1881,19 +1881,19 @@ function DashboardInner() {
             </div>
           ) : activeChapter === 3 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={3} title="PiaÈ›a È™i locaÈ›ia" fields={cap3Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol3} onCompletionChange={(val) => handleCompletionChange(3, val)} />)}
+              {renderBlurred(<Capitol nr={3} title="Piața și locația" fields={cap3Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol3} onCompletionChange={(val) => handleCompletionChange(3, val)} />)}
             </div>
           ) : activeChapter === 4 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={4} title="Analiza concurenÈ›ei" fields={cap4Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol4} onCompletionChange={(val) => handleCompletionChange(4, val)} />)}
+              {renderBlurred(<Capitol nr={4} title="Analiza concurenței" fields={cap4Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol4} onCompletionChange={(val) => handleCompletionChange(4, val)} />)}
             </div>
           ) : activeChapter === 5 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={5} title="Plan operaÈ›ional" fields={cap5Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol5} onCompletionChange={(val) => handleCompletionChange(5, val)} />)}
+              {renderBlurred(<Capitol nr={5} title="Plan operațional" fields={cap5Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol5} onCompletionChange={(val) => handleCompletionChange(5, val)} />)}
             </div>
           ) : activeChapter === 6 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={6} title="AutorizaÈ›ii" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={() => [{ titlu: "", text: "Sistemul a generat automat lista de autorizaÈ›ii necesare din configuraÈ›ie." }]} isAutoGenerated onCompletionChange={(val) => handleCompletionChange(6, val)} />)}
+              {renderBlurred(<Capitol nr={6} title="Autorizații" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={() => [{ titlu: "", text: "Sistemul a generat automat lista de autorizații necesare din configurație." }]} isAutoGenerated onCompletionChange={(val) => handleCompletionChange(6, val)} />)}
             </div>
           ) : activeChapter === 8 ? (
             <div style={ch7.wrap}>
@@ -1901,7 +1901,7 @@ function DashboardInner() {
             </div>
           ) : activeChapter === 10 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={10} title="Plan de acÈ›iune" fields={cap10Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol10} onCompletionChange={(val) => handleCompletionChange(10, val)} />)}
+              {renderBlurred(<Capitol nr={10} title="Plan de acțiune" fields={cap10Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol10} onCompletionChange={(val) => handleCompletionChange(10, val)} />)}
             </div>
           ) : (
             renderBlurred(<ChapterPlaceholder chapter={activeChapterObj} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} />)
@@ -1909,7 +1909,7 @@ function DashboardInner() {
         </main>
       </div>
 
-      {/* â”€â”€ Global Assemble Button â”€â”€ */}
+      {/* ── Global Assemble Button ── */}
       <div className="floating-assemble-btn" style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 100 }}>
         <button
           onClick={handleAssembleFullPlan}
@@ -1920,13 +1920,13 @@ function DashboardInner() {
             fontWeight: 600, border: 'none', cursor: allNarrativeCompleted ? 'pointer' : 'not-allowed',
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
           }}
-          title={!allNarrativeCompleted ? "CompleteazÄƒ toate capitolele narative (2,3,4,5,8,10) pentru a activa" : "Generare PDF"}
+          title={!allNarrativeCompleted ? "Completează toate capitolele narative (2,3,4,5,8,10) pentru a activa" : "Generare PDF"}
         >
-          ðŸ“„ Generare PDF
+          📄 Generare PDF
         </button>
       </div>
 
-      {/* â”€â”€ Modal Full Plan â”€â”€ */}
+      {/* ── Modal Full Plan ── */}
       {showFullPlanPreview && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -1938,7 +1938,7 @@ function DashboardInner() {
             maxHeight: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden'
           }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#111' }}>Planul tÄƒu de afaceri</h2>
+              <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#111' }}>Planul tău de afaceri</h2>
               <button onClick={() => setShowFullPlanPreview(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1 }}>&times;</button>
             </div>
             <div style={{ padding: 24, overflowY: 'auto', flex: 1 }}>
@@ -1953,30 +1953,30 @@ function DashboardInner() {
             </div>
             <div style={{ padding: '20px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', gap: 16 }}>
               <button onClick={() => setShowFullPlanPreview(false)} style={{ padding: '10px 20px', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer', fontWeight: 500 }}>
-                ÃŽnchide
+                Închide
               </button>
               <button onClick={() => window.print()} style={{ padding: '10px 20px', borderRadius: 6, border: 'none', background: '#0f766e', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
-                ExportÄƒ PDF
+                Exportă PDF
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* â”€â”€ Bottom Nav Mobile â”€â”€ */}
+      {/* ── Bottom Nav Mobile ── */}
       <div className="bottom-nav-mobile">
         <button
           className={`bottom-nav-btn ${activeChapter === 7 ? 'active' : ''}`}
           onClick={() => { setActiveChapter(7); setShowChapterDrawer(false); }}
         >
-          <span className="bottom-nav-icon">ðŸ“Š</span>
-          <span>Estimare financiarÄƒ</span>
+          <span className="bottom-nav-icon">📊</span>
+          <span>Estimare financiară</span>
         </button>
         <button
           className={`bottom-nav-btn ${showChapterDrawer ? 'active' : ''}`}
           onClick={() => setShowChapterDrawer(true)}
         >
-          <span className="bottom-nav-icon">ðŸ“‹</span>
+          <span className="bottom-nav-icon">📋</span>
           <span>Capitole</span>
         </button>
         <button
@@ -1990,7 +1990,7 @@ function DashboardInner() {
           disabled={!allNarrativeCompleted}
           style={{ opacity: allNarrativeCompleted ? 1 : 0.5 }}
         >
-          <span className="bottom-nav-icon">ðŸ“„</span>
+          <span className="bottom-nav-icon">📄</span>
           <span>Generare PDF</span>
         </button>
         <button
@@ -2002,12 +2002,12 @@ function DashboardInner() {
           }}
           style={{ color: '#ef4444' }}
         >
-          <span className="bottom-nav-icon">ðŸšª</span>
-          <span>IeÈ™i</span>
+          <span className="bottom-nav-icon">🚪</span>
+          <span>Ieși</span>
         </button>
       </div>
 
-      {/* â”€â”€ Chapter Drawer Mobile â”€â”€ */}
+      {/* ── Chapter Drawer Mobile ── */}
       <div className={`chapter-drawer-overlay ${showChapterDrawer ? 'open' : ''}`} onClick={() => setShowChapterDrawer(false)} />
       <div className={`chapter-drawer ${showChapterDrawer ? 'open' : ''}`}>
         <div className="drawer-handle" />
@@ -2019,9 +2019,9 @@ function DashboardInner() {
                 className="drawer-item"
                 style={{ color: '#0f766e', fontWeight: 600 }}
               >
-                <span style={{ fontSize: '1rem' }}>ðŸ“‹</span>
+                <span style={{ fontSize: '1rem' }}>📋</span>
                 <span className="drawer-title">Proiectele mele</span>
-                <span className="drawer-arrow">â†’</span>
+                <span className="drawer-arrow">→</span>
               </button>
             </li>
           )}
@@ -2036,7 +2036,7 @@ function DashboardInner() {
                   <StatusDot status={statuses[ch.id]} />
                   <span className="drawer-num">{ch.id}.</span>
                   <span className="drawer-title">{ch.title}</span>
-                  <span className="drawer-arrow">â†’</span>
+                  <span className="drawer-arrow">→</span>
                 </button>
               </li>
             );
@@ -2044,9 +2044,9 @@ function DashboardInner() {
         </ul>
       </div>
 
-      {/* â”€â”€ Sticky Banner for Preview â”€â”€ */}
+      {/* ── Sticky Banner for Preview ── */}
 
-      {/* â”€â”€ Unlock Modal â”€â”€ */}
+      {/* ── Unlock Modal ── */}
       {showUnlockModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -2059,10 +2059,10 @@ function DashboardInner() {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
           }}>
             <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#111', fontWeight: 600 }}>
-              AceastÄƒ funcÈ›ie e disponibilÄƒ dupÄƒ deblocare
+              Această funcție e disponibilă după deblocare
             </h3>
             <p style={{ margin: 0, fontSize: '0.9375rem', color: '#4b5563', lineHeight: 1.5 }}>
-              DeblocheazÄƒ acum pentru 149 lei È™i acceseazÄƒ toate cifrele, tabelele editabile È™i exportul PDF.
+              Deblochează acum pentru 149 lei și accesează toate cifrele, tabelele editabile și exportul PDF.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
               <button
@@ -2072,7 +2072,7 @@ function DashboardInner() {
                   border: 'none', borderRadius: 8, fontWeight: 600, fontSize: '1rem', cursor: 'pointer'
                 }}
               >
-                DeblocheazÄƒ â€” 149 lei
+                Deblochează — 149 lei
               </button>
               <button
                 onClick={() => setShowUnlockModal(false)}
@@ -2081,21 +2081,21 @@ function DashboardInner() {
                   border: '1px solid #d1d5db', borderRadius: 8, fontWeight: 500, fontSize: '0.9375rem', cursor: 'pointer'
                 }}
               >
-                Poate mai tÃ¢rziu
+                Poate mai târziu
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* â”€â”€ Unlocked Toast â”€â”€ */}
+      {/* ── Unlocked Toast ── */}
       {showUnlockedToast && (
         <div style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 3000,
           backgroundColor: '#10b981', color: 'white', padding: '12px 24px',
           borderRadius: 8, fontWeight: 500, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
         }}>
-          âœ“ Simulare deblocatÄƒ â€” bine ai venit!
+          ✓ Simulare deblocată — bine ai venit!
         </div>
       )}
     </div>
@@ -2111,7 +2111,7 @@ export default function DashboardPage() {
     <Suspense fallback={
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center',
         justifyContent: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-        Se Ã®ncarcÄƒ simulareaâ€¦
+        Se încarcă simularea…
       </div>
     }>
       <DashboardInner />
@@ -2123,9 +2123,9 @@ export default function DashboardPage() {
 // Layout styles
 // ---------------------------------------------------------------------------
 
-const KPI_H  = 52;   // px â€” height of the fixed KPI bar
-const HDR_H  = 60;   // px â€” page header height
-const SIDE_W = 224;  // px â€” sidebar width
+const KPI_H  = 52;   // px — height of the fixed KPI bar
+const HDR_H  = 60;   // px — page header height
+const SIDE_W = 224;  // px — sidebar width
 
 const lay: Record<string, React.CSSProperties> = {
   root: {
