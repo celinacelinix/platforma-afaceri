@@ -1567,10 +1567,11 @@ function DashboardInner() {
 
   const renderBlurred = (content: React.ReactNode) => { return <>{content}</>; };
 
-  // ── Project save/load ──
+  // ──  //  Project save/load 
   const [proiectId, setProiectId] = useState<string | null>(proiectIdParam);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [loaded, setLoaded] = useState(false);
+  const [chaptersData, setChaptersData] = useState<Record<number, { formData: any, assembledData: any, isSaved: boolean }>>({});
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [activeChapter, setActiveChapter] = useState(7);
@@ -1585,6 +1586,10 @@ function DashboardInner() {
   const handleCompletionChange = (nr: number, isComplete: boolean) => {
     setChapterCompletion(prev => ({ ...prev, [nr]: isComplete }));
     setStatuses(prev => ({ ...prev, [nr]: isComplete ? 'green' : 'yellow' }));
+  };
+
+  const handleChapterDataChange = (nr: number, data: { formData: any; assembledData: any; isSaved: boolean }) => {
+    setChaptersData(prev => ({ ...prev, [nr]: data }));
   };
 
   const narrativeChapters = [2, 3, 4, 5, 8, 10];
@@ -1629,31 +1634,51 @@ function DashboardInner() {
 
   // ── Load project from Supabase ──
   useEffect(() => {
-    if (!proiectIdParam) {
+    const applyState = (s: any) => {
+      if (s.buget != null) setBuget(s.buget as number);
+      if (s.suprafata != null) setSuprafata(s.suprafata as number);
+      if (s.concept != null) setConcept(s.concept as string);
+      if (s.localitate != null) setLocalitate(s.localitate as string);
+      if (s.tipAfacere != null) setTipAfacere(s.tipAfacere as string);
+      if (s.descriere) setDescriere(s.descriere as any);
+      if (s.chaptersData) setChaptersData(s.chaptersData as any);
+      if (s.meniu) setMeniu(s.meniu as MenuItem[]);
+      if (s.cheltuieli) setCheltuieli(s.cheltuieli as CheltuialaItem[]);
+      if (s.stocuri) setStocuri(s.stocuri as StocItem[]);
+      if (s.clientiZi != null) setClientiZi(s.clientiZi as number);
+      if (s.pierderiPct != null) setPierderiPct(s.pierderiPct as number);
+      if (s.rampaMuni != null) setRampaMuni(s.rampaMuni as number);
+      if (s.preDeschidereMuni != null) setPreDeschidereMuni(s.preDeschidereMuni as number);
+      if (s.angajati != null) setAngajati(s.angajati as number);
+      if (s.salariuMediu != null) setSalariuMediu(s.salariuMediu as number);
+      if (s.scenariu) setScenariu(s.scenariu as 'pesimist' | 'realist' | 'optimist');
+    };
+
+    const fallbackLocal = () => {
+      const local = localStorage.getItem('proiect_curent');
+      if (local) {
+        try {
+          const s = JSON.parse(local);
+          applyState(s);
+        } catch(e) {}
+      }
       setLoaded(true);
+    };
+
+    if (!proiectIdParam) {
+      fallbackLocal();
       return;
     }
     const supabase = createClient();
     supabase.from('proiecte').select('*').eq('id', proiectIdParam).single()
       .then(({ data, error }) => {
-        if (error || !data) { setLoaded(true); return; }
+        if (error || !data) {
+          fallbackLocal();
+          return;
+        }
         const s = data.state as Record<string, unknown>;
-        if (s.buget != null) setBuget(s.buget as number);
-        if (s.suprafata != null) setSuprafata(s.suprafata as number);
-        if (s.concept != null) setConcept(s.concept as string);
-        if (s.localitate != null) setLocalitate(s.localitate as string);
-        if (s.tipAfacere != null) setTipAfacere(s.tipAfacere as string);
-        if (s.descriere) setDescriere(s.descriere as any);
-        if (s.meniu) setMeniu(s.meniu as MenuItem[]);
-        if (s.cheltuieli) setCheltuieli(s.cheltuieli as CheltuialaItem[]);
-        if (s.stocuri) setStocuri(s.stocuri as StocItem[]);
-        if (s.clientiZi != null) setClientiZi(s.clientiZi as number);
-        if (s.pierderiPct != null) setPierderiPct(s.pierderiPct as number);
-        if (s.rampaMuni != null) setRampaMuni(s.rampaMuni as number);
-        if (s.preDeschidereMuni != null) setPreDeschidereMuni(s.preDeschidereMuni as number);
-        if (s.angajati != null) setAngajati(s.angajati as number);
-        if (s.salariuMediu != null) setSalariuMediu(s.salariuMediu as number);
-        if (s.scenariu) setScenariu(s.scenariu as 'pesimist' | 'realist' | 'optimist');
+        applyState(s);
+        localStorage.setItem('proiect_curent', JSON.stringify(s));
         setLoaded(true);
       });
    
@@ -1666,7 +1691,7 @@ function DashboardInner() {
     if (!params.get('buget') && !proiectIdParam) return;
     const supabase = createClient();
     const projectState = {
-      buget, suprafata, concept, localitate, tipAfacere, descriere,
+      buget, suprafata, concept, localitate, tipAfacere, descriere, chaptersData,
       meniu: DEFAULT_MENU, cheltuieli: DEFAULT_CHELTUIELI, stocuri: DEFAULT_STOCURI,
       clientiZi: 80, pierderiPct: 6, rampaMuni: 5, preDeschidereMuni: 3,
       angajati: 6, salariuMediu: 4000, scenariu: 'realist',
@@ -1689,31 +1714,51 @@ function DashboardInner() {
 
   // ── Save function (called by debounce) ──
   const doSave = useCallback(async () => {
-    if (!user || !proiectId) return;
     setSaveStatus('saving');
-    const supabase = createClient();
+    
     const projectState = {
-      buget, suprafata, concept, localitate, tipAfacere, descriere,
+      buget, suprafata, concept, localitate, tipAfacere, descriere, chaptersData,
       meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu,
     };
-    const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' · ') || 'Proiect nou';
-    await supabase.from('proiecte').update({
-      state: projectState,
-      nume: numeProiect,
-      domeniu: tipAfacere,
-      localitate: localitate || null,
-      actualizat_la: new Date().toISOString(),
-    }).eq('id', proiectId);
-    setSaveStatus('saved');
+    
+    // Always save to localStorage as backup
+    try {
+      localStorage.setItem('proiect_curent', JSON.stringify(projectState));
+    } catch(e) {}
+
+    // If no user or no project ID, we only rely on localStorage (e.g. admin mode or new user)
+    if (!user || !proiectId) {
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const numeProiect = [tipAfacere, concept, localitate].filter(Boolean).join(' - ') || 'Proiect nou';
+      const { error } = await supabase.from('proiecte').update({
+        state: projectState,
+        nume: numeProiect,
+        domeniu: tipAfacere,
+        localitate: localitate || null,
+        actualizat_la: new Date().toISOString(),
+      }).eq('id', proiectId);
+      
+      if (error) throw error;
+      setSaveStatus('saved');
+    } catch (e) {
+      console.error(e);
+      setSaveStatus('error');
+    }
     setTimeout(() => setSaveStatus('idle'), 2000);
-  }, [user, proiectId, buget, suprafata, concept, localitate, tipAfacere, descriere,
+  }, [user, proiectId, buget, suprafata, concept, localitate, tipAfacere, descriere, chaptersData,
       meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu]);
 
   // ── Auto-save debounce (3s after any data change) ──
   useEffect(() => {
-    if (!loaded || !user || !proiectId) return;
+    if (!loaded) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       doSave();
@@ -1722,7 +1767,7 @@ function DashboardInner() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buget, suprafata, concept, localitate, tipAfacere, descriere, meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
+  }, [buget, suprafata, concept, localitate, tipAfacere, descriere, chaptersData, meniu, cheltuieli, stocuri, clientiZi, pierderiPct,
       rampaMuni, preDeschidereMuni, angajati, salariuMediu, scenariu, loaded, proiectId]);
 
   const onConfirmMission = (key: string, val: number) => {
@@ -1790,13 +1835,13 @@ function DashboardInner() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }} className="header-actions">
             {renderBlurred(<ScenariuSwitcher value={scenariu} onChange={setScenariu} />)}
-            {user && saveStatus !== 'idle' && (
+            {saveStatus !== 'idle' && (
               <span style={{
                 fontSize: '0.75rem',
-                color: saveStatus === 'saved' ? '#16a34a' : '#9ca3af',
+                color: saveStatus === 'saved' ? '#16a34a' : saveStatus === 'error' ? '#dc2626' : '#9ca3af',
                 fontWeight: 500,
               }}>
-                {saveStatus === 'saving' ? 'â³ Se salvează...' : '✓ Salvat'}
+                {saveStatus === 'saving' ? '⏳ Se salvează...' : saveStatus === 'error' ? '⚠ Nesalvat' : '✓ Salvat'}
               </span>
             )}
             {user && (
@@ -1865,35 +1910,35 @@ function DashboardInner() {
             renderBlurred(<Chapter9 rez={rez as Record<string, unknown>} buget={buget} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} missionStatus={missionStatus} onConfirmMission={onConfirmMission} />)
           ) : activeChapter === 1 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={1} title="Rezumat executiv" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={(f, s, r) => asambleazaCapitol1({ cap2: {} }, s, r)} isAutoGenerated isBlocked={!allNarrativeCompleted} blockedMessage="Acest capitol se generează automat pe baza celorlalte capitole. Asigură-te că ai completat toate celelalte capitole înainte de a-l asambla." onCompletionChange={(val) => handleCompletionChange(1, val)} />)}
+              {renderBlurred(<Capitol nr={1} title="Rezumat executiv" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={(f, s, r) => asambleazaCapitol1({ cap2: {} }, s, r)} isAutoGenerated isBlocked={!allNarrativeCompleted} blockedMessage="Acest capitol se generează automat pe baza celorlalte capitole. Asigură-te că ai completat toate celelalte capitole înainte de a-l asambla." onCompletionChange={(val) => handleCompletionChange(1, val)} chapterData={chaptersData[1]} onChangeChapterData={(d) => handleChapterDataChange(1, d)} />)}
             </div>
           ) : activeChapter === 2 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol2Ghidat nr={2} title="Descrierea afacerii" state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} descriere={descriere} onChangeDescriere={setDescriere} onComplete={(val) => handleCompletionChange(2, val)} />)}
+              {renderBlurred(<Capitol2Ghidat nr={2} title="Concept și poziționare" state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} descriere={descriere} onChangeDescriere={setDescriere} onComplete={(val) => handleCompletionChange(2, val)} />)}
             </div>
           ) : activeChapter === 3 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={3} title="Piața și locația" fields={cap3Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol3} onCompletionChange={(val) => handleCompletionChange(3, val)} />)}
+              {renderBlurred(<Capitol nr={3} title="Piața și locația" fields={cap3Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol3} onCompletionChange={(val) => handleCompletionChange(3, val)} chapterData={chaptersData[3]} onChangeChapterData={(d) => handleChapterDataChange(3, d)} />)}
             </div>
           ) : activeChapter === 4 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={4} title="Analiza concurenței" fields={cap4Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol4} onCompletionChange={(val) => handleCompletionChange(4, val)} />)}
+              {renderBlurred(<Capitol nr={4} title="Analiza concurenței" fields={cap4Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol4} onCompletionChange={(val) => handleCompletionChange(4, val)} chapterData={chaptersData[4]} onChangeChapterData={(d) => handleChapterDataChange(4, d)} />)}
             </div>
           ) : activeChapter === 5 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={5} title="Plan operațional" fields={cap5Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol5} onCompletionChange={(val) => handleCompletionChange(5, val)} />)}
+              {renderBlurred(<Capitol nr={5} title="Plan operațional" fields={cap5Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol5} onCompletionChange={(val) => handleCompletionChange(5, val)} chapterData={chaptersData[5]} onChangeChapterData={(d) => handleChapterDataChange(5, d)} />)}
             </div>
           ) : activeChapter === 6 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={6} title="Autorizații" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={() => [{ titlu: "", text: "Sistemul a generat automat lista de autorizații necesare din configurație." }]} isAutoGenerated onCompletionChange={(val) => handleCompletionChange(6, val)} />)}
+              {renderBlurred(<Capitol nr={6} title="Autorizații" fields={[]} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={() => [{ titlu: "", text: "Sistemul a generat automat lista de autorizații necesare din configurație." }]} isAutoGenerated onCompletionChange={(val) => handleCompletionChange(6, val)} chapterData={chaptersData[6]} onChangeChapterData={(d) => handleChapterDataChange(6, d)} />)}
             </div>
           ) : activeChapter === 8 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={8} title="Marketing" fields={cap8Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol8} onCompletionChange={(val) => handleCompletionChange(8, val)} />)}
+              {renderBlurred(<Capitol nr={8} title="Marketing" fields={cap8Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol8} onCompletionChange={(val) => handleCompletionChange(8, val)} chapterData={chaptersData[8]} onChangeChapterData={(d) => handleChapterDataChange(8, d)} />)}
             </div>
           ) : activeChapter === 10 ? (
             <div style={ch7.wrap}>
-              {renderBlurred(<Capitol nr={10} title="Plan de acțiune" fields={cap10Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol10} onCompletionChange={(val) => handleCompletionChange(10, val)} />)}
+              {renderBlurred(<Capitol nr={10} title="Plan de acțiune" fields={cap10Fields} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} onAssemble={asambleazaCapitol10} onCompletionChange={(val) => handleCompletionChange(10, val)} chapterData={chaptersData[10]} onChangeChapterData={(d) => handleChapterDataChange(10, d)} />)}
             </div>
           ) : (
             renderBlurred(<ChapterPlaceholder chapter={activeChapterObj} state={{ ...buildState(...params_op), concept, localitate, tip_afacere: tipAfacere }} rez={rez} />)
